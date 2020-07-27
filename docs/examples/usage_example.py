@@ -1,3 +1,7 @@
+"""
+Doc str
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -27,7 +31,7 @@ def example(plotting=True):
     # Setup Hankel transform structure
     print('Setting up Hankel transform structure ...')
     H = HankelTransform(0, r_max, nr)
-    K = 2 * np.pi * H.V  # Maximum K vector
+    K = 2 * np.pi * H.v_max  # Maximum K vector
 
     # Generate electric field:
     print('Generating electric field ...')

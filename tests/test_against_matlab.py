@@ -31,7 +31,10 @@ def test_bessel_zeros(type_: int, order: int, n_zeros: int, engine):
 
 def test_hankel_matrix(engine):
     matlab_to_python_mappings = {'N': 'n_points',
-                                 'P': 'order'}
+                                 'P': 'order',
+                                 'alpha_N1': 'alpha_n1',
+                                 'V': 'v_max'
+                                 }
     r_max = 5e-3
     nr = 512
     h = HankelTransform(0, r_max, nr)
@@ -43,7 +46,8 @@ def test_hankel_matrix(engine):
             f"Hankel matrix key {key} doesn't match"
 
 
-def test_qdht(engine):
+@pytest.mark.parametrize('scaling', HankelTransformMode)
+def test_qdht(engine, mode: HankelTransformMode):
     r_max = 5e-3
     nr = 512
     h = HankelTransform(0, r_max, nr)
@@ -57,13 +61,13 @@ def test_qdht(engine):
     # noinspection PyUnresolvedReferences
     er_m = matlab.double(er[np.newaxis, :].transpose().tolist())
 
-    for mode in range(0, 4):
-        matlab_value = engine.qdht(er_m, hm, mode, nargout=1)
-        python_value = h.qdht(er, HankelTransformMode(mode))
-        assert matlab_python_allclose(python_value, matlab_value)
+    matlab_value = engine.qdht(er_m, hm, float(mode), nargout=1)
+    python_value = h.qdht(er, mode)
+    assert matlab_python_allclose(python_value, matlab_value)
 
 
-def test_iqdht(engine):
+@pytest.mark.parametrize('scaling', HankelTransformMode)
+def test_iqdht(engine, mode: HankelTransformMode):
     r_max = 5e-3
     nr = 512
     h = HankelTransform(0, r_max, nr)
@@ -77,18 +81,11 @@ def test_iqdht(engine):
     # noinspection PyUnresolvedReferences
     er_m = matlab.double(er[np.newaxis, :].transpose().tolist())
 
-    for mode in range(0, 4):
-        # Matlab QDHT and IQDHT use different mode number ordering, so we need to switch mode
-        # around here. This allows sensibly named Enum values.
-        matlab_mode = mode
-        if mode == 1:
-            matlab_mode = 2
-        elif mode == 2:
-            matlab_mode = 1
+    matlab_mode = float(mode)
 
-        matlab_value = engine.iqdht(er_m, hm, matlab_mode, nargout=1)
-        python_value = h.iqdht(er, HankelTransformMode(mode))
-        assert matlab_python_allclose(python_value, matlab_value)
+    matlab_value = engine.iqdht(er_m, hm, matlab_mode, nargout=1)
+    python_value = h.iqdht(er, mode)
+    assert matlab_python_allclose(python_value, matlab_value)
 
 
 def matlab_python_allclose(python_value, matlab_value):
@@ -126,7 +123,7 @@ def example():
     z = np.arange(0, Nz) * dz  # Propagation axis
 
     ht = HankelTransform(0, r_max, nr)
-    k_max = 2 * np.pi * ht.V  # Maximum K vector
+    k_max = 2 * np.pi * ht.v_max  # Maximum K vector
 
     field = gauss1d(r, 0, beam_radius) * np.exp(1j * propagation_direction * r)  # Initial field
     ht_field = spline(r, field, ht.r)  # Resampled field

@@ -4,3 +4,4 @@ utils-*.zip
 .cache/
 .idea/
 docs/build
+docs/auto_examples
