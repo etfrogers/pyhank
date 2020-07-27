@@ -3,3 +3,4 @@ __pycache__
 utils-*.zip
 .cache/
 .idea/
+docs/build

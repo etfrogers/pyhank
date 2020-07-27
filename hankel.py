@@ -6,6 +6,7 @@ from scipy import interpolate
 
 
 class BesselType(Enum):
+    """TODO"""
     JN = 1  # Jn
     YN = 2  # Yn
     JNP = 3  # J_n'
@@ -13,6 +14,7 @@ class BesselType(Enum):
 
 
 class HankelTransformMode(Enum):
+    """TODO"""
     BOTH_SCALED = 0
     SCALED_OUTPUT = 1
     INPUT_SCALED = 2
@@ -20,46 +22,45 @@ class HankelTransformMode(Enum):
 
 
 class HankelTransform:
-    def __init__(self, order: int, max_radius: float, n_points: int):
-        """HANKEL_MATRIX: Generates data to use for Hankel Transforms
-        %
-        %	self = hankel_matrix(order, max_radius, n_points)
-        %
-        %	order		    =	Transform order
-        %	max_radius		=	Radial extent of transform
-        %	n_points		=	Number of sample points
-        %
-        %	self:
-        %		alpha		=	Roots of the pth order Bessel fn.
-        %					=	[alpha_1, alpha_2, ... alpha_N]
-        %		alpha_N1	=	(N+1)th root
-        %		r			=	Radial co-ordinate vector
-        %		v			=	frequency co-ordinate vector
-        %		kr			=	Radial wave number co-ordinate vector
-        %		V			=	Limiting frequency
-        %					=	alpha_N1/(2piR)
-        %		S			=	RV product
-        %					=	2*pi*max_radius*V
-        %		T			=	Transform matrix
-        %		JR, JV		=	Transform vectors
-        %					=	J_p1(alpha)/max_radius  or jp1(alpha)/V where p1 = order+1
-        %
-        %	The algorithm used is that from:
-        %		"Computation of quasi-discrete Hankel transforms of the integer
-        %		order for propagating optical wave fields"
-        %		Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
-        %		J. Opt. Soc. Am. A 21(1) 53-58 (2004)
-        %
-        %	The algorithm also calls the function:
-        %	zn = bessel_zeros(1, order, N+1, 1e-6),
-        %	where order and N are defined above, to calculate the roots of the bessel
-        %	function. This algorithm is taken from:
-        %  		"An Algorithm with ALGOL 60 Program for the Computation of the
-        %  		zeros of the Ordinary Bessel Functions and those of their
-        %  		Derivatives".
-        %  		N. M. Temme
-        %  		Journal of Computational Physics, 32, 270-279 (1979)"""
+    r"""The main class for performing Hankel Transforms
+        
+        :parameter order: Transform order :math:`p`
+        :type order: :class:`int`
+        :parameter max_radius: Radial extent of transform :math:`r_\textrm{max}`
+        :type max_radius: :class:`float`
+        :parameter n_points: Number of sample points :math:`N`
+        :type n_points: :class:`int`
 
+        :ivar alpha: The first :math:`N` Roots of the :math:`p` th order Bessel function.
+        :ivar alpha_N1: (N+1)th root :math:`\alpha_{N1}`
+        :ivar r: Radial co-ordinate vector
+        :ivar v: frequency co-ordinate vector
+        :ivar kr: Radial wave number co-ordinate vector
+        :ivar V: Limiting frequency :math:`V = \alpha_{N1}/(2 \pi R)`
+        :ivar S: RV product :math:`2\pi r_\textrm{max} V`
+        :ivar T: Transform matrix
+        :ivar JR: Radius transform vector :math:`J_{p+1}(\alpha) / r_\textrm{max}`
+        :ivar JV: Frequency transform vector :math:`J_{p+1}(\alpha) / V`
+
+        The algorithm used is that from:
+
+            *"Computation of quasi-discrete Hankel transforms of the integer
+            order for propagating optical wave fields"*
+            Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
+            J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
+        
+        The algorithm also calls the function:
+
+        .. code-block:: python
+
+            alpha = bessel_zeros(BesselType.JN, order, n_points+1,)
+
+        where ``order`` and ``n_points`` are defined above, to calculate the roots of the bessel
+        function. 
+        """
+
+    def __init__(self, order: int, max_radius: float, n_points: int):
+        """Constructor"""
         self._order = order
         self._max_radius = max_radius
         self._n_points = n_points
@@ -184,40 +185,41 @@ class HankelTransform:
         return fr
 
 
-def bessel_zeros(bessel_function_type: BesselType, bessel_order, n):
-    """BESSEL_ZEROS: Finds the first n zeros of bessel_order bessel function
-    z = bessel_zeros(bessel_function_type, bessel_order, n, e)
+def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: int):
+    """Find the first :code:`n_zeros` zeros of a Bessel function of order :code:`bessel_order`.
 
-    z	=	zeros of the bessel function
-    bessel_function_type	=	Bessel function type:
-        JN (1):	    Jn
-        YN (2):	    Yn
-        JNP (3):	Jn'
-        YNP (4):	Yn'
-    bessel_order	=	Bessel order (bessel_order>=0)
-    n	=	Number of zeros to find
-    e	=	Relative error in root
-    %
-    This function uses the routine described in:
-        "An Algorithm with ALGOL 60 Program for the Computation of the
-        zeros of the Ordinary Bessel Functions and those of their
-        Derivatives".
-        N. M. Temme
-        Journal of Computational Physics, 32, 270-279 (1979)"""
+    Bessel function type:
+    JN (1):	    Jn
+    YN (2):	    Yn
+    JNP (3):	Jn'
+    YNP (4):	Yn'
 
+    This function is a convenience wrapper for :func:`scipy.special.jn_zeros`
+
+    :parameter bessel_function_type:
+    :type bessel_function_type: :class:`.BesselType`
+    :parameter bessel_order: Bessel order The ordern the Bessel function :math:`n`
+    :type bessel_order: :class:`int`
+    :parameter n_zeros:	Number of zeros to find
+    :type n_zeros: :class:`int`
+
+    :return: Zeros of the Bessel function
+    :rtype: :class:`numpy.ndarray`
+
+    """
     if bessel_function_type == BesselType.JN:
-        return scipybessel.jn_zeros(bessel_order, n)
+        return scipybessel.jn_zeros(bessel_order, n_zeros)
     elif bessel_function_type == BesselType.YN:
-        return scipybessel.yn_zeros(bessel_order, n)
+        return scipybessel.yn_zeros(bessel_order, n_zeros)
     elif bessel_function_type == BesselType.JNP:
-        zeros = scipybessel.jnp_zeros(bessel_order, n)
+        zeros = scipybessel.jnp_zeros(bessel_order, n_zeros)
         if bessel_order == 0:
             # to match Matlab implementation
             zeros[1:] = zeros[:-1]
             zeros[0] = 0
         return zeros
     elif bessel_function_type == BesselType.YNP:
-        return scipybessel.ynp_zeros(bessel_order, n)
+        return scipybessel.ynp_zeros(bessel_order, n_zeros)
     else:
         raise NotImplementedError
 
@@ -227,4 +229,3 @@ def spline(x0, y0, x):
     # return interpolate.splev(x, tck)
     f = interpolate.interp1d(x0, y0, 'cubic', axis=0, fill_value='extrapolate')
     return f(x)
-

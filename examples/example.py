@@ -4,10 +4,11 @@ import numpy as np
 from hankel import HankelTransform, spline, HankelTransformMode
 
 
+def gauss1d(x, x0, fwhm):
+    return np.exp(-2 * np.log(2) * ((x - x0) / fwhm) ** 2)
+
+
 def example(plotting=True):
-    # Gaussian function
-    def gauss1d(x, x0, fwhm):
-        return np.exp(-2 * np.log(2) * ((x - x0) / fwhm) ** 2)
 
     # Initialise grid
     print('Initialising data ...')
