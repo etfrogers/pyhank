@@ -1,4 +1,4 @@
-This is my gallery
-==================
+Pyhank Examples
+===============
 
-Below is a gallery of examples
+Below is a gallery of usage examples and some exploration of speed.

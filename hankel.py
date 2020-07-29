@@ -68,7 +68,7 @@ class HankelTransform:
             ``scaling`` argument (an instance of :class:`HankelTransformMode`) which allows
             skipping the scaling that is otherwise necessary in the
             algorithm. For a use case when the same function is transformed multiple times,
-            this can increase the speed of the algorithm see :ref:`Test <sphx_glr_.._build_auto_examples_scaling_speed>`
+            this can increase the speed of the algorithm see :ref:`Test <sphx_glr_auto_examples_scaling_speed>`
             for an example of this.
 
             If the ``scaling`` argument is passed to :meth:`~.HankelTransform.qdht` and
@@ -101,11 +101,22 @@ class HankelTransform:
                     f_r = (\mathbf{T} \times (f_v / J_V)) \times J_R
         """
 
-    def __init__(self, order: int, max_radius: float, n_points: int):
+    def __init__(self, order: int, max_radius: float = None, n_points: int = None,
+                 radial_grid: np.ndarray = None):
+        usage = 'Either radial_grid or both max_radius and n_points must be supplied'
+        if radial_grid is None:
+            assert max_radius is not None and n_points is not None, usage
+        else:
+            assert max_radius is None and n_points is None, usage
+            assert radial_grid.ndim == 1
+            max_radius = np.max(radial_grid)
+            n_points = radial_grid.size
+
         """Constructor"""
         self._order = order
         self._max_radius = max_radius
         self._n_points = n_points
+        self._original_radial_grid = radial_grid
 
         # Calculate N+1 roots:
         alpha = bessel_zeros(BesselType.JN, self.p, self.n_points + 1)
@@ -160,7 +171,7 @@ class HankelTransform:
         :type scaling: :class:`.HankelTransformMode`
 
         :return fv: Function in frequency space (sampled at self.v)
-        :rtype : :class:`numpy.ndarray`
+        :rtype: :class:`numpy.ndarray`
         """
         try:
             n2 = fr.shape[1]
@@ -203,7 +214,7 @@ class HankelTransform:
         :type scaling: :class:`.HankelTransformMode`
 
         :return fr: Radial function (sampled at self.r) = IHT(fv)
-        :rtype : :class:`numpy.ndarray`
+        :rtype: :class:`numpy.ndarray`
         """
 
         try:
