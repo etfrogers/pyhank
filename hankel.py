@@ -119,7 +119,7 @@ class HankelTransform:
         self._original_radial_grid = radial_grid
 
         # Calculate N+1 roots:
-        alpha = bessel_zeros(BesselType.JN, self.p, self.n_points + 1)
+        alpha = bessel_zeros(BesselType.JN, self.order, self.n_points + 1)
         self.alpha = alpha[0:-1]
         self.alpha_n1 = alpha[-1]
 
@@ -138,7 +138,7 @@ class HankelTransform:
         self.JV = jp1 / self.v_max
 
     @property
-    def p(self):
+    def order(self):
         return self._order
 
     @property
@@ -148,6 +148,12 @@ class HankelTransform:
     @property
     def n_points(self):
         return self._n_points
+
+    def to_transform_r(self, function):
+        return _spline(self._original_radial_grid, function, self.r)
+
+    def to_original_r(self, function):
+        return _spline(self.r, function, self._original_radial_grid)
 
     def qdht(self, fr: np.ndarray,
              scaling: HankelTransformMode = HankelTransformMode.UNSCALED):
@@ -281,7 +287,6 @@ def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: i
         raise NotImplementedError
 
 
-# TODO make a member of HankelTransform
-def spline(x0, y0, x):
+def _spline(x0, y0, x):
     f = interpolate.interp1d(x0, y0, 'cubic', axis=0, fill_value='extrapolate')
     return f(x)
