@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from matlab.engine import start_matlab
 
-from hankel import BesselType, HankelTransformMode, bessel_zeros, HankelTransform, spline
+from ..hankel import BesselType, HankelTransformMode, bessel_zeros, HankelTransform, _spline
 
 
 @pytest.fixture(scope='session')
@@ -31,7 +31,7 @@ def test_bessel_zeros(type_: int, order: int, n_zeros: int, engine):
 
 def test_hankel_matrix(engine):
     matlab_to_python_mappings = {'N': 'n_points',
-                                 'P': 'order',
+                                 'p': 'order',
                                  'alpha_N1': 'alpha_n1',
                                  'V': 'v_max'
                                  }
@@ -47,7 +47,7 @@ def test_hankel_matrix(engine):
 
 
 @pytest.mark.parametrize('scaling', HankelTransformMode)
-def test_qdht(engine, mode: HankelTransformMode):
+def test_qdht(engine, scaling: HankelTransformMode):
     r_max = 5e-3
     nr = 512
     h = HankelTransform(0, r_max, nr)
@@ -61,13 +61,13 @@ def test_qdht(engine, mode: HankelTransformMode):
     # noinspection PyUnresolvedReferences
     er_m = matlab.double(er[np.newaxis, :].transpose().tolist())
 
-    matlab_value = engine.qdht(er_m, hm, float(mode), nargout=1)
-    python_value = h.qdht(er, mode)
+    matlab_value = engine.qdht(er_m, hm, float(scaling), nargout=1)
+    python_value = h.qdht(er, scaling)
     assert matlab_python_allclose(python_value, matlab_value)
 
 
 @pytest.mark.parametrize('scaling', HankelTransformMode)
-def test_iqdht(engine, mode: HankelTransformMode):
+def test_iqdht(engine, scaling: HankelTransformMode):
     r_max = 5e-3
     nr = 512
     h = HankelTransform(0, r_max, nr)
@@ -81,10 +81,10 @@ def test_iqdht(engine, mode: HankelTransformMode):
     # noinspection PyUnresolvedReferences
     er_m = matlab.double(er[np.newaxis, :].transpose().tolist())
 
-    matlab_mode = float(mode)
+    matlab_mode = float(scaling)
 
     matlab_value = engine.iqdht(er_m, hm, matlab_mode, nargout=1)
-    python_value = h.iqdht(er, mode)
+    python_value = h.iqdht(er, scaling)
     assert matlab_python_allclose(python_value, matlab_value)
 
 
@@ -122,11 +122,11 @@ def example():
     dz = z_max / (Nz - 1)
     z = np.arange(0, Nz) * dz  # Propagation axis
 
-    ht = HankelTransform(0, r_max, nr)
+    ht = HankelTransform(0, radial_grid=r)
     k_max = 2 * np.pi * ht.v_max  # Maximum K vector
 
     field = gauss1d(r, 0, beam_radius) * np.exp(1j * propagation_direction * r)  # Initial field
-    ht_field = spline(r, field, ht.r)  # Resampled field
+    ht_field = ht.to_transform_r(field)  # Resampled field
 
     transform = ht.qdht(ht_field, HankelTransformMode.UNSCALED)  # Convert from physical field to physical wavevector
 
@@ -139,7 +139,7 @@ def example():
         propagation_phase = (np.sqrt(k_max ** 2 - ht.kr ** 2) - k_max) * z_loop  # Propagation phase
         propagated_transform = scaled_transform * np.exp(1j * propagation_phase)  # Apply propagation
         propagated_ht_field = ht.iqdht(propagated_transform, HankelTransformMode.BOTH_SCALED)  # iQDHT (no scaling)
-        propagated_field = spline(ht.r, propagated_ht_field * ht.JR, r)  # Interpolate & scale output
+        propagated_field = _spline(ht.r, propagated_ht_field * ht.JR, r)  # Interpolate & scale output
         propagated_intensity[:, n] = np.abs(propagated_field) ** 2
 
     return transform, propagated_intensity
