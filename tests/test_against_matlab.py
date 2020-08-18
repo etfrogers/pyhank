@@ -3,9 +3,10 @@ import os
 import numpy as np
 import pytest
 matlab = pytest.importorskip('matlab')
-from matlab.engine import start_matlab
+from matlab.engine import start_matlab  # noqa: E402
 
-from ..hankel import BesselType, HankelTransformMode, bessel_zeros, HankelTransform, _spline
+from ..hankel import BesselType, HankelTransformMode, bessel_zeros, \
+    HankelTransform, _spline  # noqa: E402
 
 
 @pytest.fixture(scope='session')
