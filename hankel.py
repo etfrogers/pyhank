@@ -25,7 +25,7 @@ class HankelTransformMode(IntEnum):
 
 class HankelTransform:
     r"""The main class for performing Hankel Transforms
-        
+
         :parameter order: Transform order :math:`p`
         :type order: :class:`int`
         :parameter max_radius: Radial extent of transform :math:`r_\textrm{max}`
@@ -50,7 +50,7 @@ class HankelTransform:
             order for propagating optical wave fields"*
             Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
             J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
-        
+
         The algorithm also calls the function:
 
         .. code-block:: python

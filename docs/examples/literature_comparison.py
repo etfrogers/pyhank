@@ -60,7 +60,7 @@ for p in [1, 4]:
 
     plt.subplot(2, 1, 2)
     plt.plot(transformer.v, dynamical_error)
-    plt.title(f'Dynamical error')
+    plt.title('Dynamical error')
     plt.tight_layout()
 
     # Check that the error is low, as they do in the paper. Numbers are estimated from their

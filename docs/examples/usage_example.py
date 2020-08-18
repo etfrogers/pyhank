@@ -42,9 +42,9 @@ def imagesc(x: np.ndarray, y: np.ndarray, intensity: np.ndarray, axes=None, **kw
     img.axes.invert_yaxis()
     return img
 
+
 # %%
 # Initialise radius grid
-
 nr = 1024  # Number of sample points
 r_max = 5e-3  # Maximum radius (50um)
 dr = r_max / (nr - 1)  # Radial spacing
@@ -148,4 +148,3 @@ imagesc(z * 1e3, r * 1e3, Irz_norm)
 plt.xlabel('Propagation distance ($z$) /mm')
 plt.ylabel('Radial position ($r$) /mm')
 plt.ylim([0, 1])
-
