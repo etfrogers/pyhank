@@ -1,8 +1,8 @@
 import os
 
-import matlab
 import numpy as np
 import pytest
+matlab = pytest.importorskip('matlab')
 from matlab.engine import start_matlab
 
 from ..hankel import BesselType, HankelTransformMode, bessel_zeros, HankelTransform, _spline
