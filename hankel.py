@@ -103,16 +103,19 @@ class HankelTransform:
 
     def __init__(self, order: int, max_radius: float = None, n_points: int = None,
                  radial_grid: np.ndarray = None):
+        """Constructor"""
+
         usage = 'Either radial_grid or both max_radius and n_points must be supplied'
         if radial_grid is None:
-            assert max_radius is not None and n_points is not None, usage
+            if max_radius is None or n_points is None:
+                raise ValueError(usage)
         else:
-            assert max_radius is None and n_points is None, usage
-            assert radial_grid.ndim == 1
+            if max_radius is not None or n_points is not None:
+                raise ValueError(usage)
+            assert radial_grid.ndim == 1, 'Radial grid must be a 1d array'
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
 
-        """Constructor"""
         self._order = order
         self._max_radius = max_radius
         self._n_points = n_points
@@ -131,7 +134,7 @@ class HankelTransform:
         self.S = self.alpha_n1
 
         # Calculate hankel matrix and vectors
-        jp = scipybessel.jv(order, np.matmul(self.alpha[:, np.newaxis], self.alpha[np.newaxis, :]) / self.S)
+        jp = scipybessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
         jp1 = np.abs(scipybessel.jv(order + 1, self.alpha))
         self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S)
         self.JR = jp1 / self.max_radius
@@ -148,6 +151,10 @@ class HankelTransform:
     @property
     def n_points(self):
         return self._n_points
+
+    @property
+    def original_radial_grid(self):
+        return self._original_radial_grid
 
     def to_transform_r(self, function):
         return _spline(self._original_radial_grid, function, self.r)

@@ -5,3 +5,4 @@ utils-*.zip
 .idea/
 docs/build
 docs/auto_examples
+.coverage
