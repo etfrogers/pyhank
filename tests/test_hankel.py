@@ -184,18 +184,47 @@ def test_top_hat(transformer: HankelTransform, a: float):
 #
 # def test_bessel_delta():
 #     raise NotImplementedError
-#
-#
-# def test_gaussian():
-#     raise NotImplementedError
-#
-#
+
+
+@pytest.mark.parametrize('a', [2, 5, 10])
+def test_gaussian(a: float, radius: np.ndarray):
+    # Note the definition in Guizar-Sicairos varies by 2*pi in
+    # both scaling of the argument (so use kr rather than v) and
+    # scaling of the magnitude.
+    transformer = HankelTransform(order=0, radial_grid=radius)
+    f = np.exp(-a ** 2 * transformer.r ** 2)
+    expected_ht = 2*np.pi*(1 / (2 * a**2)) * np.exp(-transformer.kr**2 / (4 * a**2))
+    actual_ht = transformer.qdht(f)
+    assert np.allclose(expected_ht, actual_ht)
+
+
 # def test_1_over_root_r2_plus_z2():
 #     raise NotImplementedError
-#
-#
-# def test_1_over_r2_plus_z2():
-#     raise NotImplementedError
+    # import matplotlib.pyplot as plt
+    # plt.figure()
+    # plt.subplot(2, 1, 1)
+    # plt.plot(transformer.r, f)
+    # plt.subplot(2, 1, 2)
+    # plt.plot(transformer.kr, expected_ht, transformer.kr, actual_ht)
+    # plt.xlim([0, 20])
+    # plt.show()
+
+
+@pytest.mark.parametrize('a', [2, 1, 0.1])
+def test_1_over_r2_plus_z2(a: float):
+    # Note the definition in Guizar-Sicairos varies by 2*pi in
+    # both scaling of the argument (so use kr rather than v) and
+    # scaling of the magnitude.
+    transformer = HankelTransform(order=0, n_points=1024, max_radius=50)
+    f = 1 / (transformer.r**2 + a**2)
+    # kn cannot handle complex arguments, so a must be real
+    expected_ht = 2*np.pi*scipybessel.kn(0, a*transformer.kr)
+    actual_ht = transformer.qdht(f)
+    # These tolerances are pretty loose, but there seems to be large
+    # error here
+    assert np.allclose(expected_ht, actual_ht, rtol=0.1, atol=0.01)
+    error = np.mean(np.abs(expected_ht - actual_ht))
+    assert error < 4e-3
 
 
 def sinc(x):
