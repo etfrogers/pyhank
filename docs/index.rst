@@ -3,14 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Pyhank: Discrete Hankel Transforms for Python
-=============================================
+PyHank: Quasi-Discrete Hankel Transforms for Python
+===================================================
+
+.. include:: summary.rst
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-.. toctree::
 
    hankel
 
