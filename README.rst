@@ -7,7 +7,7 @@ PyHank - Quasi-Discrete Hankel Transforms for Python
  :alt: Documentation Status
 
 
-.. image:: https://img.shields.io/travis/etfrogers/pyhank/master.svg?label=tests
+.. image:: https://img.shields.io/travis/com/etfrogers/pyhank/master.svg?label=tests
   :alt: Test Status
 
 
