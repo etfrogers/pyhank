@@ -155,8 +155,8 @@ def test_r_grid_equivalence(shape: Callable, transformer: HankelTransform):
     assert np.allclose(function, inverse_transformed)
 
 
-def test_2d_input():
-    raise NotImplementedError
+# def test_2d_input():
+#     raise NotImplementedError
 
 
 # Test known HT pairs
@@ -178,24 +178,24 @@ def test_top_hat(transformer: HankelTransform, a: float):
     assert error < 1e-3
 
 
-def test_delta_bessel():
-    raise NotImplementedError
-
-
-def test_bessel_delta():
-    raise NotImplementedError
-
-
-def test_gaussian():
-    raise NotImplementedError
-
-
-def test_1_over_root_r2_plus_z2():
-    raise NotImplementedError
-
-
-def test_1_over_r2_plus_z2():
-    raise NotImplementedError
+# def test_delta_bessel():
+#     raise NotImplementedError
+#
+#
+# def test_bessel_delta():
+#     raise NotImplementedError
+#
+#
+# def test_gaussian():
+#     raise NotImplementedError
+#
+#
+# def test_1_over_root_r2_plus_z2():
+#     raise NotImplementedError
+#
+#
+# def test_1_over_r2_plus_z2():
+#     raise NotImplementedError
 
 
 def sinc(x):
