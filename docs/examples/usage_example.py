@@ -17,7 +17,7 @@ import numpy as np
 
 # %%
 # Then the functions from this package
-from hankel import HankelTransform, spline, HankelTransformMode
+from hankel import HankelTransform, HankelTransformMode
 
 # %%
 # Helper functions
@@ -67,13 +67,13 @@ k0 = 2 * np.pi / lambda_  # Vacuum k vector
 # %%
 # Set up a ``HankelTransform`` object, telling it the order (``0``) and
 # the radial grid parameters.
-H = HankelTransform(0, r_max, nr)
+H = HankelTransform(order=0, radial_grid=r)
 
 # %%
 # Set up the electric field profile at :math:`z = 0`, and resample it so that
 # it is ready for transform.
 Er = gauss1d(r, 0, Dr)   # Initial field
-ErH = spline(r, Er, H.r)  # Resampled field
+ErH = H.to_transform_r(Er)  # Resampled field
 
 # %%
 # Perform Hankel Transform
@@ -101,7 +101,7 @@ for n, z_loop in enumerate(z[1:]):
     phiz = kz * z_loop  # Propagation phase
     EkrHz = EkrH_ * np.exp(1j * phiz)  # Apply propagation
     ErHz = H.iqdht(EkrHz, HankelTransformMode.BOTH_SCALED)  # iQDHT (no scaling)
-    Erz = spline(H.r, ErHz * H.JR, r)  # Interpolate & scale output
+    Erz = H.to_original_r(ErHz * H.JR)  # Interpolate & scale output
     Irz[:, n+1] = np.abs(Erz) ** 2
 
 # %%

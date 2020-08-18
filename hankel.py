@@ -154,13 +154,16 @@ class HankelTransform:
 
     @property
     def original_radial_grid(self):
+        if self._original_radial_grid is None:
+            raise ValueError('Attempted to access original_radial_grid on HankelTransform '
+                             'object that was not constructed with a r_grid')
         return self._original_radial_grid
 
     def to_transform_r(self, function):
-        return _spline(self._original_radial_grid, function, self.r)
+        return _spline(self.original_radial_grid, function, self.r)
 
     def to_original_r(self, function):
-        return _spline(self.r, function, self._original_radial_grid)
+        return _spline(self.r, function, self.original_radial_grid)
 
     def qdht(self, fr: np.ndarray,
              scaling: HankelTransformMode = HankelTransformMode.UNSCALED):
@@ -294,6 +297,8 @@ def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: i
         raise NotImplementedError
 
 
-def _spline(x0, y0, x):
-    f = interpolate.interp1d(x0, y0, 'cubic', axis=0, fill_value='extrapolate')
+def _spline(x0, y0, x, **kwargs):
+    if 'kind' not in kwargs:
+        kwargs['kind'] = 'cubic'
+    f = interpolate.interp1d(x0, y0, axis=0, fill_value='extrapolate', **kwargs)
     return f(x)
