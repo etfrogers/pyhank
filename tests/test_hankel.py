@@ -2,7 +2,7 @@ from typing import Callable
 
 import numpy as np
 import pytest
-import scipy.special as scipybessel
+import scipy.special as scipy_bessel
 
 from ..hankel import HankelTransform, HankelTransformMode
 
@@ -15,6 +15,8 @@ smooth_shapes = [lambda r: np.exp(-r ** 2),
 all_shapes = smooth_shapes.copy()
 all_shapes.append(lambda r: np.random.random(r.size))
 
+orders = list(range(0, 5))
+
 
 def generalised_top_hat(r: np.ndarray, a: float, p: int) -> np.ndarray:
     top_hat = np.zeros_like(r)
@@ -23,7 +25,7 @@ def generalised_top_hat(r: np.ndarray, a: float, p: int) -> np.ndarray:
 
 
 def generalised_jinc(v: np.ndarray, a: float, p: int):
-    return a ** (p + 1) * scipybessel.jv(p + 1, 2 * np.pi * a * v) / v
+    return a ** (p + 1) * scipy_bessel.jv(p + 1, 2 * np.pi * a * v) / v
 
 
 @pytest.fixture()
@@ -31,24 +33,60 @@ def radius() -> np.ndarray:
     return np.linspace(0, 3, 1024)
 
 
-@pytest.fixture(params=range(0, 5))
+@pytest.fixture(params=orders)
 def transformer(request, radius) -> HankelTransform:
     order = request.param
     return HankelTransform(order, radial_grid=radius)
 
 
+@pytest.mark.parametrize('two_d_input', [True, False])
 @pytest.mark.parametrize('scaling', HankelTransformMode)
 def test_scaling(radius: np.ndarray, scaling: HankelTransformMode,
-                 transformer: HankelTransform):
-    func = np.random.random(radius.shape)
+                 transformer: HankelTransform, two_d_input: bool):
+    if two_d_input:
+        func = np.random.random([radius.size, 10])
+        jr = transformer.JR[:, np.newaxis]
+        jv = transformer.JV[:, np.newaxis]
+    else:
+        func = np.random.random(radius.shape)
+        jr = transformer.JR
+        jv = transformer.JV
+
     if scaling in (HankelTransformMode.FR_SCALED, HankelTransformMode.BOTH_SCALED):
-        scaled_func = func / transformer.JR
+        scaled_func = func / jr
     else:
         scaled_func = func
     ht = transformer.qdht(scaled_func, scaling)
+
     if scaling in (HankelTransformMode.FV_SCALED, HankelTransformMode.BOTH_SCALED):
-        ht = ht * transformer.JV
+        ht = ht * jv
+
     assert np.allclose(ht, transformer.qdht(func))
+
+
+# noinspection DuplicatedCode
+@pytest.mark.parametrize('two_d_input', [True, False])
+@pytest.mark.parametrize('scaling', HankelTransformMode)
+def test_inverse_scaling(radius: np.ndarray, scaling: HankelTransformMode,
+                         transformer: HankelTransform, two_d_input: bool):
+    if two_d_input:
+        func = np.random.random([radius.size, 10])
+        jr = transformer.JR[:, np.newaxis]
+        jv = transformer.JV[:, np.newaxis]
+    else:
+        func = np.random.random(radius.shape)
+        jr = transformer.JR
+        jv = transformer.JV
+
+    if scaling in (HankelTransformMode.FV_SCALED, HankelTransformMode.BOTH_SCALED):
+        scaled_func = func / jv
+    else:
+        scaled_func = func
+    iht = transformer.iqdht(scaled_func, scaling)
+
+    if scaling in (HankelTransformMode.FR_SCALED, HankelTransformMode.BOTH_SCALED):
+        iht = iht * jr
+    assert np.allclose(iht, transformer.iqdht(func))
 
 
 @pytest.mark.parametrize('shape', all_shapes)
@@ -77,9 +115,7 @@ def test_energy_conservation(shape: Callable,
                              x=transformer.r)
 
     ht = transformer.qdht(func)
-    # ht *= transformer.n_points
     intensity_after = np.abs(ht)**2
-    energy_after = np.sum(intensity_after)
     energy_after = np.trapz(y=intensity_after * 2 * np.pi * transformer.v,
                             x=transformer.v)
     assert np.isclose(energy_before, energy_after, rtol=0.01)
@@ -136,29 +172,6 @@ def test_r_grid_errors():
     _ = HankelTransform(order=0, radial_grid=r_1d)
 
 
-@pytest.mark.xfail
-@pytest.mark.parametrize('shape', smooth_shapes)
-def test_r_grid_equivalence(shape: Callable, transformer: HankelTransform):
-    # create a new transformer with original_radial_grid already correctly spaced
-    original_transformer = transformer
-    transformer = HankelTransform(order=original_transformer.order,
-                                  radial_grid=original_transformer.r)
-
-    assert np.allclose(transformer.r, transformer.original_radial_grid)
-    function = shape(transformer.r)
-    transformed = transformer.to_transform_r(function)
-    back_transformed = transformer.to_original_r(transformed)
-    inverse_transformed = transformer.to_original_r(function)
-
-    assert np.allclose(function, transformed)
-    assert np.allclose(function, back_transformed)
-    assert np.allclose(function, inverse_transformed)
-
-
-# def test_2d_input():
-#     raise NotImplementedError
-
-
 # Test known HT pairs
 @pytest.mark.parametrize('a', [1, 0.7, 0.1])
 def test_jinc(transformer: HankelTransform, a: float):
@@ -178,14 +191,6 @@ def test_top_hat(transformer: HankelTransform, a: float):
     assert error < 1e-3
 
 
-# def test_delta_bessel():
-#     raise NotImplementedError
-#
-#
-# def test_bessel_delta():
-#     raise NotImplementedError
-
-
 @pytest.mark.parametrize('a', [2, 5, 10])
 def test_gaussian(a: float, radius: np.ndarray):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
@@ -198,18 +203,6 @@ def test_gaussian(a: float, radius: np.ndarray):
     assert np.allclose(expected_ht, actual_ht)
 
 
-# def test_1_over_root_r2_plus_z2():
-#     raise NotImplementedError
-    # import matplotlib.pyplot as plt
-    # plt.figure()
-    # plt.subplot(2, 1, 1)
-    # plt.plot(transformer.r, f)
-    # plt.subplot(2, 1, 2)
-    # plt.plot(transformer.kr, expected_ht, transformer.kr, actual_ht)
-    # plt.xlim([0, 20])
-    # plt.show()
-
-
 @pytest.mark.parametrize('a', [2, 1, 0.1])
 def test_1_over_r2_plus_z2(a: float):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
@@ -218,7 +211,7 @@ def test_1_over_r2_plus_z2(a: float):
     transformer = HankelTransform(order=0, n_points=1024, max_radius=50)
     f = 1 / (transformer.r**2 + a**2)
     # kn cannot handle complex arguments, so a must be real
-    expected_ht = 2*np.pi*scipybessel.kn(0, a*transformer.kr)
+    expected_ht = 2 * np.pi * scipy_bessel.kn(0, a * transformer.kr)
     actual_ht = transformer.qdht(f)
     # These tolerances are pretty loose, but there seems to be large
     # error here
@@ -231,6 +224,7 @@ def sinc(x):
     return np.sin(x) / x
 
 
+# noinspection DuplicatedCode
 @pytest.mark.parametrize('p', [1, 4])
 def test_sinc(p):
     """Tests from figure 1 of

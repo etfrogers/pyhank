@@ -189,16 +189,7 @@ class HankelTransform:
         :return fv: Function in frequency space (sampled at self.v)
         :rtype: :class:`numpy.ndarray`
         """
-        try:
-            n2 = fr.shape[1]
-        except IndexError:
-            n2 = 1
-        if n2 > 1:
-            jr = self.JR * np.ones((1, n2))
-            jv = self.JV * np.ones((1, n2))
-        else:
-            jr = self.JR
-            jv = self.JV
+        jr, jv = self._get_scaling_factors(fr)
 
         if scaling == HankelTransformMode.FV_SCALED:
             fv = np.matmul(self.T, (fr / jr))
@@ -211,6 +202,19 @@ class HankelTransform:
         else:
             raise NotImplementedError
         return fv
+
+    def _get_scaling_factors(self, fr):
+        try:
+            n2 = fr.shape[1]
+        except IndexError:
+            n2 = 1
+        if n2 > 1:
+            jr = self.JR[:, np.newaxis] * np.ones((1, n2))
+            jv = self.JV[:, np.newaxis] * np.ones((1, n2))
+        else:
+            jr = self.JR
+            jv = self.JV
+        return jr, jv
 
     def iqdht(self, fv: np.ndarray,
               scaling: HankelTransformMode = HankelTransformMode.UNSCALED):
@@ -232,17 +236,7 @@ class HankelTransform:
         :return fr: Radial function (sampled at self.r) = IHT(fv)
         :rtype: :class:`numpy.ndarray`
         """
-
-        try:
-            n2 = fv.shape[1]
-        except IndexError:
-            n2 = 1
-        if n2 > 1:
-            jr = self.JR * np.ones((1, n2))
-            jv = self.JV * np.ones((1, n2))
-        else:
-            jr = self.JR
-            jv = self.JV
+        jr, jv = self._get_scaling_factors(fv)
 
         if scaling == HankelTransformMode.FR_SCALED:
             fr = np.matmul(self.T, (fv / jv))
