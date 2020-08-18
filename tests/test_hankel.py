@@ -79,17 +79,6 @@ def test_energy_conservation(shape: Callable,
     ht = transformer.qdht(func)
     # ht *= transformer.n_points
     intensity_after = np.abs(ht)**2
-    import matplotlib.pyplot as plt
-    plt.figure()
-    plt.subplot(2, 1, 1)
-    plt.plot(transformer.r, intensity_before)
-    plt.xlabel('Radius $r$')
-    # plt.xlim([0, 10])
-    plt.subplot(2, 1, 2)
-    plt.plot(transformer.v, intensity_after)
-    plt.xlabel('Frequency $v$')
-    # plt.xlim([0, 10])
-    plt.show()
     energy_after = np.sum(intensity_after)
     energy_after = np.trapz(y=intensity_after * 2 * np.pi * transformer.v,
                             x=transformer.v)
@@ -117,7 +106,7 @@ def test_round_trip_with_interpolation(shape: Callable,
     reconstructed_hr = transformer.iqdht(ht)
     reconstructed = transformer.to_original_r(reconstructed_hr)
 
-    assert np.allclose(func, reconstructed)
+    assert np.allclose(func, reconstructed, rtol=2e-4)
 
 
 def test_r_grid_errors():
