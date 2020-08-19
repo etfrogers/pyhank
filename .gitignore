@@ -6,3 +6,6 @@ utils-*.zip
 docs/build
 docs/auto_examples
 .coverage
+build/
+dist/
+pyhank.egg-info/

@@ -2,5 +2,5 @@
 Hankel Transforms
 =================
 
-.. automodule:: hankel
+.. automodule:: pyhank.hankel
     :members:

@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.special as scipybessel
 
-from hankel import HankelTransform
+from pyhank import HankelTransform
 
 
 # %%
@@ -39,7 +39,7 @@ def hankel_transform_of_sinc(v):
 
 
 # %%
-# Plot values of the hankel transform and the dynamical error as in figure 1 of |Guizar|
+# Plot values of the hankel transform and the dynamical error as in figure 1 of |Guizar| `Guizar`_
 # for order 1 and 4
 for p in [1, 4]:
     transformer = HankelTransform(p, max_radius=3, n_points=256)
@@ -83,7 +83,7 @@ ht = transformer.qdht(func)
 retrieved_func = transformer.iqdht(ht)
 
 # %%
-# Plot the overlay as in figure 3 of |Guizar|
+# Plot the overlay as in figure 3 of |Guizar| `Guizar`_
 
 plt.figure()
 plt.subplot(2, 1, 1)
@@ -103,7 +103,7 @@ plt.tight_layout()
 
 # %%
 # Now check that the error is the same as that given in Table 1
-# of |Guizar|
+# of |Guizar| `Guizar`_
 
 # First calculate e_1 and e_2
 error_2 = np.mean(np.abs(expected_ht-ht))

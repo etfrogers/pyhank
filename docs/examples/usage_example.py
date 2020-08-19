@@ -17,7 +17,7 @@ import numpy as np
 
 # %%
 # Then the functions from this package
-from hankel import HankelTransform, HankelTransformMode
+from pyhank import HankelTransform, HankelTransformMode
 
 # %%
 # Helper functions

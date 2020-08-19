@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import scipy.special as scipy_bessel
 
-from ..hankel import HankelTransform, HankelTransformMode
+from pyhank import HankelTransform, HankelTransformMode
 
 
 smooth_shapes = [lambda r: np.exp(-r ** 2),
