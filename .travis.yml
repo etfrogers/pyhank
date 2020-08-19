@@ -12,3 +12,11 @@ script:
   - python3 setup.py sdist bdist_wheel
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+deploy:
+  provider: pypi
+  username: "__token__"
+  password:
+    secure: Y7z+26voEsfPFok5TxKiglHw+BBVEEFtG3HaTJLKcld1Ugb2EpZCMOh7pFmPhPvhVWcGKb3w/ZraXwcpvM9orebSZWQ2HCuMXbtKO1ziVtqtMP54H4WAVWsLG+OdZBiTiLseJClYdD7epEfJ2uJYfDBaOrA7ip3Mhphx/ddSHJuce0ELT/bJFTgb5rN8pQGrNLQ7FY+U8DsxiK19BKHB8bcilfzP47T9wvqX1iBE/gpn6JpSKZXuiPiQryvPjTfzbySVJhupqXgSS3QQwjm/ez7iNOX7XaJ5IiRKVOuefRYlyEiXULUxkTKtZPWvaKJ0QIzuQxiMhFoN2mheQc+8sjH4T2bxY5tOwX2cRuLKhS4snbU525t/i+OJt+K+d5BZ+/UEriXSJXZSOKWlhs95VlXiJHrS8M2iZuDmTot97zFk7/omW29IeCrkRfmJoY4bfh1lf4//zlOYlqq6QAuB4WIYykgNm85/f6SCf6+8o8j0NdxSlhVZrTP6eyzZMjgT7fBTP8RBWs0Rd94KsdRCOC6z1QLj3glW0ysE+firCdn5zMMOeZeIjTUzTyZvZRIFlc6buQcp1gqLqZjGO1fmP9dydbsxUINpNP+dg5bjwy0iimZU/ZryxG4UY3UjXCWfop2ptYSqA4MEPQscM6FSoiKERUYGCMSdq1kyVjNEzis=
+  on:
+    tags: true
+    branch: release
