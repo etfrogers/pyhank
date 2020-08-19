@@ -1,6 +1,6 @@
 import setuptools
 
-with open("README.rst", "r") as fh:
+with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -10,7 +10,7 @@ setuptools.setup(
     author_email="etfrogers@hotmail.com",
     description="pyhank - Quasi-discrete Hankel transforms for python",
     long_description=long_description,
-    long_description_content_type="text/x-rst",
+    long_description_content_type="text/markdown",
     url="https://github.com/etfrogers/pyhank",
     packages=setuptools.find_packages(),
     classifiers=[
