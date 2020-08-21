@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pyhank",
-    version="0.1.2",
+    version="0.2.0",
     author="Edward Rogers",
     author_email="etfrogers@hotmail.com",
     description="pyhank - Quasi-discrete Hankel transforms for python",
