@@ -20,3 +20,4 @@ deploy:
   on:
     tags: true
     branch: release
+  skip_existing: true
