@@ -1,7 +1,8 @@
 from enum import Enum, IntEnum
+from typing import Tuple
 
 import numpy as np
-import scipy.special as scipybessel
+import scipy.special as scipy_bessel
 from scipy import interpolate
 
 
@@ -68,7 +69,8 @@ class HankelTransform:
             ``scaling`` argument (an instance of :class:`HankelTransformMode`) which allows
             skipping the scaling that is otherwise necessary in the
             algorithm. For a use case when the same function is transformed multiple times,
-            this can increase the speed of the algorithm see :ref:`Test <sphx_glr_auto_examples_scaling_speed>`
+            this can increase the speed of the algorithm. See
+            :ref:`the speed of usage examples <sphx_glr_auto_examples_speed_usage_example.py>`
             for an example of this.
 
             If the ``scaling`` argument is passed to :meth:`~.HankelTransform.qdht` and
@@ -102,29 +104,41 @@ class HankelTransform:
         """
 
     def __init__(self, order: int, max_radius: float = None, n_points: int = None,
-                 radial_grid: np.ndarray = None):
+                 radial_grid: np.ndarray = None, k_grid: np.ndarray = None):
         """Constructor"""
 
-        usage = 'Either radial_grid or both max_radius and n_points must be supplied'
-        if radial_grid is None:
+        usage = 'Either radial_grid or k_grid or both max_radius and n_points must be supplied'
+        if radial_grid is None and k_grid is None:
             if max_radius is None or n_points is None:
                 raise ValueError(usage)
-        else:
+        elif k_grid is not None:
+            if max_radius is not None or n_points is not None or radial_grid is not None:
+                raise ValueError(usage)
+            assert k_grid.ndim == 1, 'k grid must be a 1d array'
+            n_points = k_grid.size
+        elif radial_grid is not None:
             if max_radius is not None or n_points is not None:
                 raise ValueError(usage)
             assert radial_grid.ndim == 1, 'Radial grid must be a 1d array'
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
+        else:
+            raise ValueError(usage)
 
         self._order = order
-        self._max_radius = max_radius
         self._n_points = n_points
         self._original_radial_grid = radial_grid
+        self._original_k_grid = k_grid
 
-        # Calculate N+1 roots:
+        # Calculate N+1 roots must be calculated before max_radius can be derived from k_grid
         alpha = bessel_zeros(BesselType.JN, self.order, self.n_points + 1)
         self.alpha = alpha[0:-1]
         self.alpha_n1 = alpha[-1]
+
+        if k_grid is not None:
+            v_max = np.max(k_grid)
+            max_radius = self.alpha_n1 / (2 * np.pi * v_max)
+        self._max_radius = max_radius
 
         # Calculate co-ordinate vectors
         self.r = self.alpha * self.max_radius / self.alpha_n1
@@ -134,39 +148,129 @@ class HankelTransform:
         self.S = self.alpha_n1
 
         # Calculate hankel matrix and vectors
-        jp = scipybessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
-        jp1 = np.abs(scipybessel.jv(order + 1, self.alpha))
+        jp = scipy_bessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
+        jp1 = np.abs(scipy_bessel.jv(order + 1, self.alpha))
         self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S)
         self.JR = jp1 / self.max_radius
         self.JV = jp1 / self.v_max
 
     @property
-    def order(self):
+    def order(self) -> int:
         return self._order
 
     @property
-    def max_radius(self):
+    def max_radius(self) -> float:
         return self._max_radius
 
     @property
-    def n_points(self):
+    def n_points(self) -> int:
         return self._n_points
 
     @property
-    def original_radial_grid(self):
+    def original_radial_grid(self) -> np.ndarray:
+        """ Return the original radial grid used to construct the object, or raise a :class:`ValueError`
+        if the constructor was not called specifying a ``radial_grid`` parameter.
+
+        :return: The original radial grid used to construct the object.
+        :rtype: :class:`numpy.ndarray`
+        """
         if self._original_radial_grid is None:
             raise ValueError('Attempted to access original_radial_grid on HankelTransform '
-                             'object that was not constructed with a r_grid')
+                             'object that was not constructed with a radial_grid')
         return self._original_radial_grid
 
-    def to_transform_r(self, function):
+    @property
+    def original_k_grid(self) -> np.ndarray:
+        """ Return the original k grid used to construct the object, or raise a :class:`ValueError`
+        if the constructor was not called specifying a ``k_grid`` parameter.
+
+        :return: The original k grid used to construct the object.
+        :rtype: :class:`numpy.ndarray`
+        """
+        if self._original_k_grid is None:
+            raise ValueError('Attempted to access original_k_grid on HankelTransform '
+                             'object that was not constructed with a k_grid')
+        return self._original_k_grid
+
+    def to_transform_r(self, function: np.ndarray) -> np.ndarray:
+        """Interpolate a function, assumed to have been given at the original radial
+        grid points used to construct the ``HankelTransform`` object onto the grid required
+        of use in the QDHT algorithm.
+
+        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
+        grid in radius, then it needs the function to transform to be sampled at a specific
+        grid before it can be passed to :meth:`.HankelTransform.qdht`. This method provides
+        a convenient way of doing this.
+
+        :parameter function: The function to be interpolated. Specified at the radial points
+            :attr:`~.HankelTransform.original_radial_grid`.
+        :type function: :class:`numpy.ndarray`
+
+        :return: Interpolated function suitable to passing to
+            :meth:`HankelTransform.qdht` (sampled at ``self.r``)
+        :rtype: :class:`numpy.ndarray`
+        """
         return _spline(self.original_radial_grid, function, self.r)
 
-    def to_original_r(self, function):
+    def to_original_r(self, function: np.ndarray) -> np.ndarray:
+        """Interpolate a function, assumed to have been given at the Hankel transform points
+        ``self.r`` (as returned by :meth:`HankelTransform.iqdht`) back onto the original grid
+        used to construct the ``HankelTransform`` object.
+
+        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
+        grid in radius, it may be useful to convert back to this grid after a IQDHT.
+        This method provides a convenient way of doing this.
+
+        :parameter function: The function to be interpolated. Specified at the radial points
+            ``self.r``.
+        :type function: :class:`numpy.ndarray`
+
+        :return: Interpolated function at the points held in :attr:`~.HankelTransform.original_radial_grid`.
+        :rtype: :class:`numpy.ndarray`
+        """
         return _spline(self.r, function, self.original_radial_grid)
 
+    def to_transform_k(self, function: np.ndarray) -> np.ndarray:
+        """Interpolate a function, assumed to have been given at the original k
+        grid points used to construct the ``HankelTransform`` object onto the grid required
+        of use in the IQDHT algorithm.
+
+        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
+        grid in k, then it needs the function to transform to be sampled at a specific
+        grid before it can be passed to :meth:`.HankelTransform.iqdht`. This method provides
+        a convenient way of doing this.
+
+        :parameter function: The function to be interpolated. Specified at the k points
+            :attr:`~.HankelTransform.original_k_grid`.
+        :type function: :class:`numpy.ndarray`
+
+        :return: Interpolated function suitable to passing to
+            :meth:`HankelTransform.qdht` (sampled at ``self.kr``)
+        :rtype: :class:`numpy.ndarray`
+        """
+
+        return _spline(self.original_k_grid, function, self.kr)
+
+    def to_original_k(self, function: np.ndarray) -> np.ndarray:
+        """Interpolate a function, assumed to have been given at the Hankel transform points
+        ``self.k`` (as returned by :meth:`HankelTransform.qdht`) back onto the original grid
+        used to construct the ``HankelTransform`` object.
+
+        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
+        grid in k, it may be useful to convert back to this grid after a QDHT.
+        This method provides a convenient way of doing this.
+
+        :parameter function: The function to be interpolated. Specified at the radial points
+            ``self.k``.
+        :type function: :class:`numpy.ndarray`
+
+        :return: Interpolated function at the points held in :attr:`~.HankelTransform.original_k_grid`.
+        :rtype: :class:`numpy.ndarray`
+        """
+        return _spline(self.kr, function, self.original_k_grid)
+
     def qdht(self, fr: np.ndarray,
-             scaling: HankelTransformMode = HankelTransformMode.UNSCALED):
+             scaling: HankelTransformMode = HankelTransformMode.UNSCALED) -> np.ndarray:
         r"""QDHT: Quasi Discrete Hankel Transform
 
         Performs the Hankel transform of a function of radius, returning
@@ -186,7 +290,7 @@ class HankelTransform:
         :parameter scaling: (optional) Parameter to control the scaling of input and output. See Scaling above
         :type scaling: :class:`.HankelTransformMode`
 
-        :return fv: Function in frequency space (sampled at self.v)
+        :return: Function in frequency space (sampled at ``self.v``)
         :rtype: :class:`numpy.ndarray`
         """
         jr, jv = self._get_scaling_factors(fr)
@@ -203,21 +307,8 @@ class HankelTransform:
             raise NotImplementedError
         return fv
 
-    def _get_scaling_factors(self, fr):
-        try:
-            n2 = fr.shape[1]
-        except IndexError:
-            n2 = 1
-        if n2 > 1:
-            jr = self.JR[:, np.newaxis] * np.ones((1, n2))
-            jv = self.JV[:, np.newaxis] * np.ones((1, n2))
-        else:
-            jr = self.JR
-            jv = self.JV
-        return jr, jv
-
     def iqdht(self, fv: np.ndarray,
-              scaling: HankelTransformMode = HankelTransformMode.UNSCALED):
+              scaling: HankelTransformMode = HankelTransformMode.UNSCALED) -> np.ndarray:
         r"""IQDHT: Inverse Quasi Discrete Hankel Transform
 
         Performs the inverse Hankel transform of a function of frequency, returning
@@ -233,7 +324,7 @@ class HankelTransform:
         :parameter scaling: (optional) Parameter to control the scaling of input and output. See Scaling above
         :type scaling: :class:`.HankelTransformMode`
 
-        :return fr: Radial function (sampled at self.r) = IHT(fv)
+        :return: Radial function (sampled at self.r) = IHT(fv)
         :rtype: :class:`numpy.ndarray`
         """
         jr, jv = self._get_scaling_factors(fv)
@@ -250,8 +341,21 @@ class HankelTransform:
             raise NotImplementedError
         return fr
 
+    def _get_scaling_factors(self, fr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        try:
+            n2 = fr.shape[1]
+        except IndexError:
+            n2 = 1
+        if n2 > 1:
+            jr = self.JR[:, np.newaxis] * np.ones((1, n2))
+            jv = self.JV[:, np.newaxis] * np.ones((1, n2))
+        else:
+            jr = self.JR
+            jv = self.JV
+        return jr, jv
 
-def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: int):
+
+def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: int) -> np.ndarray:
     """Find the first :code:`n_zeros` zeros of a Bessel function of order :code:`bessel_order`.
 
     The type of the Bessel function can be selected using the ``bessel_function_type`` parameter.
@@ -275,24 +379,22 @@ def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: i
 
     """
     if bessel_function_type == BesselType.JN:
-        return scipybessel.jn_zeros(bessel_order, n_zeros)
+        return scipy_bessel.jn_zeros(bessel_order, n_zeros)
     elif bessel_function_type == BesselType.YN:
-        return scipybessel.yn_zeros(bessel_order, n_zeros)
+        return scipy_bessel.yn_zeros(bessel_order, n_zeros)
     elif bessel_function_type == BesselType.JNP:
-        zeros = scipybessel.jnp_zeros(bessel_order, n_zeros)
+        zeros = scipy_bessel.jnp_zeros(bessel_order, n_zeros)
         if bessel_order == 0:
             # to match Matlab implementation
             zeros[1:] = zeros[:-1]
             zeros[0] = 0
         return zeros
     elif bessel_function_type == BesselType.YNP:
-        return scipybessel.ynp_zeros(bessel_order, n_zeros)
+        return scipy_bessel.ynp_zeros(bessel_order, n_zeros)
     else:
         raise NotImplementedError
 
 
-def _spline(x0, y0, x, **kwargs):
-    if 'kind' not in kwargs:
-        kwargs['kind'] = 'cubic'
-    f = interpolate.interp1d(x0, y0, axis=0, fill_value='extrapolate', **kwargs)
+def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray) -> np.ndarray:
+    f = interpolate.interp1d(x0, y0, axis=0, fill_value='extrapolate', kind='cubic')
     return f(x)

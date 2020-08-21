@@ -11,29 +11,3 @@ http://github.com/etfrogers/pyhank
 .. [#Guizar] *"Computation of quasi-discrete Hankel transforms of the integer order for propagating optical wave fields"*
   Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
   J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
-
-Installation
-------------
-
-Installation can simply be done from pip.
-PyHank requires numpy and scipy, but these will be installed by pip if necessary.
-
-``pip install pyhank``
-
-For building the docs, the following are required:
-
-- sphinx-gallery >= 0.7
-- matplotlib >= 3.2
-
-For development, and running the tests, the following are recommended:
-
-- pytest ~= 5.4.3
-- flake8 ~= 3.8.3
-- pytest-flake8 ~= 1.0.6
-- pytest-cov ~= 2.10.0
-
-Bugs & Contribution
--------------------
-
-Please use Github to report bugs, feature requests and submit your code:
-http://github.com/etfrogers/pyhank
