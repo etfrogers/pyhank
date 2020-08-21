@@ -3,7 +3,7 @@ import numpy as np
 import scipy.special as scipy_bessel
 
 from pyhank import qdht, iqdht, HankelTransform
-from tests.test_hankel import generalised_jinc, generalised_top_hat, radius, orders
+from tests.test_hankel import generalised_jinc, generalised_top_hat, orders
 
 
 @pytest.mark.parametrize('a', [1, 0.7, 0.1])

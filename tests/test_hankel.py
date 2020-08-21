@@ -37,11 +37,6 @@ def generalised_jinc(v: np.ndarray, a: float, p: int):
     return val
 
 
-@pytest.fixture()
-def radius() -> np.ndarray:
-    return np.linspace(0, 3, 1024)
-
-
 @pytest.fixture(params=orders)
 def transformer(request, radius) -> HankelTransform:
     order = request.param
