@@ -69,7 +69,8 @@ class HankelTransform:
             ``scaling`` argument (an instance of :class:`HankelTransformMode`) which allows
             skipping the scaling that is otherwise necessary in the
             algorithm. For a use case when the same function is transformed multiple times,
-            this can increase the speed of the algorithm see :ref:`Test <sphx_glr_auto_examples_scaling_speed>`
+            this can increase the speed of the algorithm. See
+            :ref:`the speed of usage examples <sphx_glr_auto_examples_speed_usage_example.py>`
             for an example of this.
 
             If the ``scaling`` argument is passed to :meth:`~.HankelTransform.qdht` and
