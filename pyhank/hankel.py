@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum
 
 import numpy as np
-import scipy.special as scipybessel
+import scipy.special as scipy_bessel
 from scipy import interpolate
 
 
@@ -102,29 +102,41 @@ class HankelTransform:
         """
 
     def __init__(self, order: int, max_radius: float = None, n_points: int = None,
-                 radial_grid: np.ndarray = None):
+                 radial_grid: np.ndarray = None, k_grid: np.ndarray = None):
         """Constructor"""
 
-        usage = 'Either radial_grid or both max_radius and n_points must be supplied'
-        if radial_grid is None:
+        usage = 'Either radial_grid or k grid or both max_radius and n_points must be supplied'
+        if radial_grid is None and k_grid is None:
             if max_radius is None or n_points is None:
                 raise ValueError(usage)
-        else:
+        elif k_grid is not None:
+            if max_radius is not None or n_points is not None or radial_grid is not None:
+                raise ValueError(usage)
+            assert k_grid.ndim == 1, 'k grid must be a 1d array'
+            n_points = k_grid.size
+        elif radial_grid is not None:
             if max_radius is not None or n_points is not None:
                 raise ValueError(usage)
             assert radial_grid.ndim == 1, 'Radial grid must be a 1d array'
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
+        else:
+            raise ValueError(usage)
 
         self._order = order
-        self._max_radius = max_radius
         self._n_points = n_points
         self._original_radial_grid = radial_grid
+        self._original_k_grid = k_grid
 
-        # Calculate N+1 roots:
+        # Calculate N+1 roots must be calculated before max_radius can be derived from k_grid
         alpha = bessel_zeros(BesselType.JN, self.order, self.n_points + 1)
         self.alpha = alpha[0:-1]
         self.alpha_n1 = alpha[-1]
+
+        if k_grid is not None:
+            v_max = np.max(k_grid)
+            max_radius = self.alpha_n1 / (2 * np.pi * v_max)
+        self._max_radius = max_radius
 
         # Calculate co-ordinate vectors
         self.r = self.alpha * self.max_radius / self.alpha_n1
@@ -134,8 +146,8 @@ class HankelTransform:
         self.S = self.alpha_n1
 
         # Calculate hankel matrix and vectors
-        jp = scipybessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
-        jp1 = np.abs(scipybessel.jv(order + 1, self.alpha))
+        jp = scipy_bessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
+        jp1 = np.abs(scipy_bessel.jv(order + 1, self.alpha))
         self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S)
         self.JR = jp1 / self.max_radius
         self.JV = jp1 / self.v_max
@@ -156,14 +168,27 @@ class HankelTransform:
     def original_radial_grid(self):
         if self._original_radial_grid is None:
             raise ValueError('Attempted to access original_radial_grid on HankelTransform '
-                             'object that was not constructed with a r_grid')
+                             'object that was not constructed with a radial_grid')
         return self._original_radial_grid
+
+    @property
+    def original_k_grid(self):
+        if self._original_k_grid is None:
+            raise ValueError('Attempted to access original_k_grid on HankelTransform '
+                             'object that was not constructed with a k_grid')
+        return self._original_k_grid
 
     def to_transform_r(self, function):
         return _spline(self.original_radial_grid, function, self.r)
 
     def to_original_r(self, function):
         return _spline(self.r, function, self.original_radial_grid)
+
+    def to_transform_k(self, function):
+        return _spline(self.original_k_grid, function, self.kr)
+
+    def to_original_k(self, function):
+        return _spline(self.kr, function, self.original_k_grid)
 
     def qdht(self, fr: np.ndarray,
              scaling: HankelTransformMode = HankelTransformMode.UNSCALED):
@@ -275,24 +300,22 @@ def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: i
 
     """
     if bessel_function_type == BesselType.JN:
-        return scipybessel.jn_zeros(bessel_order, n_zeros)
+        return scipy_bessel.jn_zeros(bessel_order, n_zeros)
     elif bessel_function_type == BesselType.YN:
-        return scipybessel.yn_zeros(bessel_order, n_zeros)
+        return scipy_bessel.yn_zeros(bessel_order, n_zeros)
     elif bessel_function_type == BesselType.JNP:
-        zeros = scipybessel.jnp_zeros(bessel_order, n_zeros)
+        zeros = scipy_bessel.jnp_zeros(bessel_order, n_zeros)
         if bessel_order == 0:
             # to match Matlab implementation
             zeros[1:] = zeros[:-1]
             zeros[0] = 0
         return zeros
     elif bessel_function_type == BesselType.YNP:
-        return scipybessel.ynp_zeros(bessel_order, n_zeros)
+        return scipy_bessel.ynp_zeros(bessel_order, n_zeros)
     else:
         raise NotImplementedError
 
 
-def _spline(x0, y0, x, **kwargs):
-    if 'kind' not in kwargs:
-        kwargs['kind'] = 'cubic'
-    f = interpolate.interp1d(x0, y0, axis=0, fill_value='extrapolate', **kwargs)
+def _spline(x0, y0, x):
+    f = interpolate.interp1d(x0, y0, axis=0, fill_value='extrapolate', kind='cubic')
     return f(x)

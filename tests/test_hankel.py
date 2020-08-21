@@ -25,7 +25,16 @@ def generalised_top_hat(r: np.ndarray, a: float, p: int) -> np.ndarray:
 
 
 def generalised_jinc(v: np.ndarray, a: float, p: int):
-    return a ** (p + 1) * scipy_bessel.jv(p + 1, 2 * np.pi * a * v) / v
+    val = a ** (p + 1) * scipy_bessel.jv(p + 1, 2 * np.pi * a * v) / v
+    if p == -1:
+        val[v == 0] = np.inf
+    elif p == -2:
+        val[v == 0] = -np.pi
+    elif p == 0:
+        val[v == 0] = np.pi * a ** 2
+    else:
+        val[v == 0] = 0
+    return val
 
 
 @pytest.fixture()
@@ -39,6 +48,7 @@ def transformer(request, radius) -> HankelTransform:
     return HankelTransform(order, radial_grid=radius)
 
 
+# noinspection DuplicatedCode
 @pytest.mark.parametrize('two_d_input', [True, False])
 @pytest.mark.parametrize('scaling', HankelTransformMode)
 def test_scaling(radius: np.ndarray, scaling: HankelTransformMode,
@@ -145,11 +155,45 @@ def test_round_trip_with_interpolation(shape: Callable,
     assert np.allclose(func, reconstructed, rtol=2e-4)
 
 
-def test_r_grid_errors():
+@pytest.mark.parametrize('a', [1, 0.7, 0.1, 136., 1e-6])
+@pytest.mark.parametrize('p', range(-10, 9))
+def test_generalised_jinc_zero(a: float, p: int):
+    if p == -1:
+        pytest.skip('Skipping test for p=-11 as 1/eps does not go to inf correctly')
+    v = np.array([0, 1e-200])
+    val = generalised_jinc(v, a, p)
+    assert np.isclose(val[0], val[1])
+
+
+def test_original_r_k_grid():
     r_1d = np.linspace(0, 1, 10)
-    r_2d = np.repeat(r_1d[:, np.newaxis], repeats=5, axis=1)
+    k_1d = r_1d.copy()
+    transformer = HankelTransform(order=0, max_radius=1, n_points=10)
     with pytest.raises(ValueError):
-        # missing any radius info
+        _ = transformer.original_radial_grid
+    with pytest.raises(ValueError):
+        _ = transformer.original_k_grid
+
+    transformer = HankelTransform(order=0, radial_grid=r_1d)
+    # no error
+    _ = transformer.original_radial_grid
+    with pytest.raises(ValueError):
+        _ = transformer.original_k_grid
+
+    transformer = HankelTransform(order=0, k_grid=k_1d)
+    # no error
+    _ = transformer.original_k_grid
+    with pytest.raises(ValueError):
+        _ = transformer.original_radial_grid
+
+
+def test_initialisation_errors():
+    r_1d = np.linspace(0, 1, 10)
+    k_1d = r_1d.copy()
+    r_2d = np.repeat(r_1d[:, np.newaxis], repeats=5, axis=1)
+    k_2d = r_2d.copy()
+    with pytest.raises(ValueError):
+        # missing any radius or k info
         HankelTransform(order=0)
     with pytest.raises(ValueError):
         # missing n_points
@@ -164,15 +208,48 @@ def test_r_grid_errors():
         # radial_grid and max_radius
         HankelTransform(order=0, radial_grid=r_1d, max_radius=1)
 
+    with pytest.raises(ValueError):
+        # k_grid and n_points
+        HankelTransform(order=0, k_grid=k_1d, n_points=10)
+    with pytest.raises(ValueError):
+        # k_grid and max_radius
+        HankelTransform(order=0, k_grid=k_1d, max_radius=1)
+    with pytest.raises(ValueError):
+        # k_grid and r_grid
+        HankelTransform(order=0, k_grid=k_1d, radial_grid=r_1d)
+
     with pytest.raises(AssertionError):
         HankelTransform(order=0, radial_grid=r_2d)
+    with pytest.raises(AssertionError):
+        HankelTransform(order=0, radial_grid=k_2d)
 
     # no error
     _ = HankelTransform(order=0, max_radius=1, n_points=10)
     _ = HankelTransform(order=0, radial_grid=r_1d)
+    _ = HankelTransform(order=0, k_grid=k_1d)
 
 
+@pytest.mark.parametrize('n', [10, 100, 512, 1024])
+@pytest.mark.parametrize('max_radius', [0.1, 10, 20, 1e6])
+def test_r_creation_equivalence(n: int, max_radius: float):
+    transformer1 = HankelTransform(order=0, n_points=1024, max_radius=50)
+    r = np.linspace(0, 50, 1024)
+    transformer2 = HankelTransform(order=0, radial_grid=r)
+
+    for key, val in transformer1.__dict__.items():
+        if key == '_original_radial_grid':
+            continue
+        val2 = getattr(transformer2, key)
+        if val is None:
+            assert val2 is None
+        else:
+            assert np.allclose(val, val2)
+
+
+# -------------------
 # Test known HT pairs
+# -------------------
+
 @pytest.mark.parametrize('a', [1, 0.7, 0.1])
 def test_jinc(transformer: HankelTransform, a: float):
     f = generalised_jinc(transformer.r, a, transformer.order)
@@ -201,6 +278,18 @@ def test_gaussian(a: float, radius: np.ndarray):
     expected_ht = 2*np.pi*(1 / (2 * a**2)) * np.exp(-transformer.kr**2 / (4 * a**2))
     actual_ht = transformer.qdht(f)
     assert np.allclose(expected_ht, actual_ht)
+
+
+@pytest.mark.parametrize('a', [2, 5, 10])
+def test_inverse_gaussian(a: float, radius: np.ndarray):
+    # Note the definition in Guizar-Sicairos varies by 2*pi in
+    # both scaling of the argument (so use kr rather than v) and
+    # scaling of the magnitude.
+    transformer = HankelTransform(order=0, radial_grid=radius)
+    ht = 2*np.pi*(1 / (2 * a**2)) * np.exp(-transformer.kr**2 / (4 * a**2))
+    actual_f = transformer.iqdht(ht)
+    expected_f = np.exp(-a ** 2 * transformer.r ** 2)
+    assert np.allclose(expected_f, actual_f)
 
 
 @pytest.mark.parametrize('a', [2, 1, 0.1])

@@ -9,3 +9,4 @@ docs/auto_examples
 build/
 dist/
 pyhank.egg-info/
+.DS_Store
