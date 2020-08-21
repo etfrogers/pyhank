@@ -93,7 +93,7 @@ class HankelTransform:
                 .. math::
                     f_v = (\mathbf{T} \times f_r) \times J_V \quad f_r = \mathbf{T} \times (f_v / J_V)
 
-            :attr:`~.HankelTransform.UNSCALED` (**default**)
+            :attr:`~.HankelTransformMode.UNSCALED` (**default**)
                 :math:`f_r`, :math:`f_v` are the real distributions.
 
                 .. math::

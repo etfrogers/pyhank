@@ -12,12 +12,26 @@ script:
   - python3 setup.py sdist bdist_wheel
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-deploy:
-  provider: pypi
-  username: "__token__"
-  password:
-    secure: "izhloGs0eOKXz8SJXW/GKZc3tejzInAIFwsgVjtBjfdbCoK2GjUNSIVpG3BrP69F8mMrxMN2R3xCzlXjB8D4Rh52wi8gjDdAhnJoTuKsYRGizbDUPNHAKPOPSUUFsDoSxzwboiGokPFRzG717jUG2k3LZsCQKj52//o2tGuyh7ikD+eAzUvr2sroBsc6lWTFwQnJ82Aff7hpeyzbLjQg+AxMJ1XIiw+6CaTvAnsxWbUE4+MNGWIqB/pV8eHRCa6bqTUxMQLcUmLm9JbgJ4Xp/VZS+HrPNljw0ru0IxhHaJxoKLIv7h2mbRKULFK7BBv67kHyl5XCgQJpNE27Dv7frrL3NpMVQm8aedkgIDekwH6EF3twVvN6kyr8CLaR27/IfVBnDNxmdVp8EzcNlLZGx93lc84QA8Yenp76sIym9IYbSldNCHd2K4MqAnQOYM+iL5DWsy1nLWN3idkr8n5l6wykA036dMEVRYti8ezaLmp/16OtoO2F+1SEfXGY+aZWfWIZkcEjEb6Qha+vnfsY5hw0BrDTNmFO/kORA4RD4tUMwH9Hb0Lkm4BOHTb9uTt6NaIWXG1SghpuKqDbDMCkI57fm/xT3yeVdRO6neUvaL+mClqxefYDmoixhXZP/PXZHpimUk9dPxfc5fcG4I/0hlMXYxqaOaKBqKpTjfXe91k="
-  on:
-    tags: true
-    branch: release
-  skip_existing: true
+jobs:
+  include:
+    - stage: Documenation
+      python: "3.7"
+      install:
+      - pip install -r dev_requirements.txt
+      - pip install -r docs/requirements.txt
+
+      script:
+        - echo "Building the docs..."
+        - sphinx-build ./docs/ ./docs/build/
+
+    - stage: Deploy
+      script: echo "Deploying to Pypi..."
+      deploy:
+        provider: pypi
+        username: "__token__"
+        password:
+          secure: "izhloGs0eOKXz8SJXW/GKZc3tejzInAIFwsgVjtBjfdbCoK2GjUNSIVpG3BrP69F8mMrxMN2R3xCzlXjB8D4Rh52wi8gjDdAhnJoTuKsYRGizbDUPNHAKPOPSUUFsDoSxzwboiGokPFRzG717jUG2k3LZsCQKj52//o2tGuyh7ikD+eAzUvr2sroBsc6lWTFwQnJ82Aff7hpeyzbLjQg+AxMJ1XIiw+6CaTvAnsxWbUE4+MNGWIqB/pV8eHRCa6bqTUxMQLcUmLm9JbgJ4Xp/VZS+HrPNljw0ru0IxhHaJxoKLIv7h2mbRKULFK7BBv67kHyl5XCgQJpNE27Dv7frrL3NpMVQm8aedkgIDekwH6EF3twVvN6kyr8CLaR27/IfVBnDNxmdVp8EzcNlLZGx93lc84QA8Yenp76sIym9IYbSldNCHd2K4MqAnQOYM+iL5DWsy1nLWN3idkr8n5l6wykA036dMEVRYti8ezaLmp/16OtoO2F+1SEfXGY+aZWfWIZkcEjEb6Qha+vnfsY5hw0BrDTNmFO/kORA4RD4tUMwH9Hb0Lkm4BOHTb9uTt6NaIWXG1SghpuKqDbDMCkI57fm/xT3yeVdRO6neUvaL+mClqxefYDmoixhXZP/PXZHpimUk9dPxfc5fcG4I/0hlMXYxqaOaKBqKpTjfXe91k="
+        on:
+          tags: true
+          branch: release
+        skip_existing: true
