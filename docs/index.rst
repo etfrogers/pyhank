@@ -6,18 +6,35 @@
 PyHank: Quasi-Discrete Hankel Transforms for Python
 ===================================================
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents
+
 .. include:: summary.rst
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+
+   installation
+
+.. toctree::
 
    hankel
 
 .. toctree::
-   :caption: Examples
+
+   one_shot
+
+
+.. toctree::
+   :caption: Usage examples
 
    auto_examples/index
+
+Bugs & Contribution
+-------------------
+
+Please use Github to report bugs, feature requests and submit your code:
+http://github.com/etfrogers/pyhank
 
 
 Indices and tables
