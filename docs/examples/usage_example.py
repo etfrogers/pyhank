@@ -18,49 +18,24 @@ import numpy as np
 # %%
 # Then the functions from this package
 from pyhank import HankelTransform, HankelTransformMode
-
-# %%
-# Helper functions
-# ----------------
-# Define a couple of helper functions for the example.
-
-
-# 1D Gaussian function
-def gauss1d(x, x0, fwhm):
-    return np.exp(-2 * np.log(2) * ((x - x0) / fwhm) ** 2)
-
-
-# Plotting function equivalent to Matlab's imagesc
-def imagesc(x: np.ndarray, y: np.ndarray, intensity: np.ndarray, axes=None, **kwargs):
-    assert x.ndim == 1 and y.ndim == 1, "Both x and y must be 1d arrays"
-    assert intensity.ndim == 2, "Intensity must be a 2d array"
-    extent = (x[0], x[-1], y[-1], y[0])
-    if axes is None:
-        img = plt.imshow(intensity, extent=extent, **kwargs, aspect='auto')
-    else:
-        img = axes.imshow(intensity, extent=extent, **kwargs, aspect='auto')
-    img.axes.invert_yaxis()
-    return img
+from helper import gauss1d, imagesc
 
 
 # %%
 # Initialise radius grid
 nr = 1024  # Number of sample points
-r_max = 5e-3  # Maximum radius (50um)
-dr = r_max / (nr - 1)  # Radial spacing
-ri = np.arange(0, nr)  # Radial pixels
-r = ri * dr  # Radial positions
+r_max = 5e-3  # Maximum radius (5mm)
+r = np.linspace(0, r_max, nr)
 
 # %%
 # Initialise :math:`z` grid
 Nz = 200  # Number of z positions
 z_max = 0.1  # Maximum propagation distance
-dz = z_max / (Nz - 1)
-z = np.arange(0, Nz) * dz  # Propagation axis
+z = np.linspace(0, z_max, Nz)  # Propagation axis
 
 # %%
 # Set up beam parameters
-Dr = 100e-6  # Beam radius (3um)
+Dr = 100e-6  # Beam radius (100um)
 lambda_ = 488e-9  # wavelength 488nm
 k0 = 2 * np.pi / lambda_  # Vacuum k vector
 
@@ -92,17 +67,15 @@ EkrH_ = EkrH / H.JV
 # %%
 # Do the propagation in a loop over :math:`z`
 
-# Pre-allocate an array for intensity as a function of r and z
-Irz = np.zeros((nr, Nz))
-# Initial intensity is square of initial field
-Irz[:, 0] = np.abs(Er) ** 2
+# Pre-allocate an array for field as a function of r and z
+Erz = np.zeros((nr, Nz))
 kz = np.sqrt(k0 ** 2 - H.kr ** 2)
-for n, z_loop in enumerate(z[1:]):
-    phiz = kz * z_loop  # Propagation phase
-    EkrHz = EkrH_ * np.exp(1j * phiz)  # Apply propagation
+for i, z_loop in enumerate(z):
+    phi_z = kz * z_loop  # Propagation phase
+    EkrHz = EkrH_ * np.exp(1j * phi_z)  # Apply propagation
     ErHz = H.iqdht(EkrHz, HankelTransformMode.BOTH_SCALED)  # iQDHT (no scaling)
-    Erz = H.to_original_r(ErHz * H.JR)  # Interpolate & scale output
-    Irz[:, n+1] = np.abs(Erz) ** 2
+    Erz[:, i] = H.to_original_r(ErHz * H.JR)  # Interpolate & scale output
+Irz = np.abs(Erz) ** 2
 
 # %%
 # Plotting
