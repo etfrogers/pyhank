@@ -13,6 +13,7 @@
 #
 import os
 import sys
+import setup as setup_config
 sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +23,7 @@ copyright = '2020, Edward Rogers'
 author = 'Edward Rogers'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = setup_config.version
 
 master_doc = 'index'
 
