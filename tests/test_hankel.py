@@ -241,6 +241,33 @@ def test_r_creation_equivalence(n: int, max_radius: float):
             assert np.allclose(val, val2)
 
 
+@pytest.mark.parametrize('shape', smooth_shapes)
+@pytest.mark.parametrize('order', orders)
+def test_round_trip_r_interpolation(radius: np.ndarray, order: int, shape: Callable):
+    transformer = HankelTransform(order=order, radial_grid=radius)
+
+    # the function must be smoothish for interpolation
+    # to work. Random every point doesn't work
+    func = shape(radius)
+    transform_func = transformer.to_transform_r(func)
+    reconstructed_func = transformer.to_original_r(transform_func)
+    assert np.allclose(func, reconstructed_func, rtol=1e-4)
+
+
+@pytest.mark.parametrize('shape', smooth_shapes)
+@pytest.mark.parametrize('order', orders)
+def test_round_trip_k_interpolation(radius: np.ndarray, order: int, shape: Callable):
+    k_grid = radius/10
+    transformer = HankelTransform(order=order, k_grid=k_grid)
+
+    # the function must be smoothish for interpolation
+    # to work. Random every point doesn't work
+    func = shape(k_grid)
+    transform_func = transformer.to_transform_k(func)
+    reconstructed_func = transformer.to_original_k(transform_func)
+    assert np.allclose(func, reconstructed_func, rtol=1e-4)
+
+
 # -------------------
 # Test known HT pairs
 # -------------------
