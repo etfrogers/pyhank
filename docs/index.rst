@@ -10,20 +10,13 @@ PyHank: Quasi-Discrete Hankel Transforms for Python
    :maxdepth: 2
    :caption: Contents
 
-.. include:: summary.rst
-
-.. toctree::
-
+   summary
    installation
-
-.. toctree::
-
    hankel
-
-.. toctree::
-
    one_shot
+   auto_examples/index
 
+.. include:: summary.rst
 
 .. toctree::
    :caption: Usage examples
