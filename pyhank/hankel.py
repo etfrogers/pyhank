@@ -1,18 +1,9 @@
-from enum import Enum, IntEnum
+from enum import IntEnum
 from typing import Tuple
 
 import numpy as np
 import scipy.special as scipy_bessel
 from scipy import interpolate
-
-
-class BesselType(Enum):
-    """Enum class specifying the type of Bessel function to use in
-    :func:`.bessel_zeros`"""
-    JN = 1  #: Bessel function of the first kind :math:`J_n`
-    YN = 2  #: Bessel function of the second kind :math:`Y_n`
-    JNP = 3  #: Derivative of Bessel function of the first kind :math:`J'_n`
-    YNP = 4  #: Derivative of Bessel function of the second kind :math:`Y'_n`
 
 
 class HankelTransformMode(IntEnum):
@@ -131,7 +122,7 @@ class HankelTransform:
         self._original_k_grid = k_grid
 
         # Calculate N+1 roots must be calculated before max_radius can be derived from k_grid
-        alpha = bessel_zeros(BesselType.JN, self.order, self.n_points + 1)
+        alpha = scipy_bessel.jn_zeros(self.order, self.n_points + 1)
         self.alpha = alpha[0:-1]
         self.alpha_n1 = alpha[-1]
 
@@ -353,46 +344,6 @@ class HankelTransform:
             jr = self.JR
             jv = self.JV
         return jr, jv
-
-
-def bessel_zeros(bessel_function_type: BesselType, bessel_order: int, n_zeros: int) -> np.ndarray:
-    """Find the first :code:`n_zeros` zeros of a Bessel function of order :code:`bessel_order`.
-
-    The type of the Bessel function can be selected using the ``bessel_function_type`` parameter.
-    It can be :math:`J_n`, :math:`Y_n`, :math:`J'_n`, or :math:`Y'_n`.
-
-    This function is a convenience wrapper for :func:`scipy.special.jn_zeros`,
-    :func:`~scipy.special.yn_zeros`, :func:`~scipy.special.jnp_zeros`, and
-    :func:`~scipy.special.ynp_zeros`. It calls those functions to the actual
-    calculation.
-
-    :parameter bessel_function_type: :class:`.BesselType` object specifying the
-        type of Bessel function for which to find the zeros
-    :type bessel_function_type: :class:`.BesselType`
-    :parameter bessel_order: Bessel order The order of the Bessel function :math:`n`
-    :type bessel_order: :class:`int`
-    :parameter n_zeros:	Number of zeros to find
-    :type n_zeros: :class:`int`
-
-    :return: Zeros of the Bessel function
-    :rtype: :class:`numpy.ndarray`
-
-    """
-    if bessel_function_type == BesselType.JN:
-        return scipy_bessel.jn_zeros(bessel_order, n_zeros)
-    elif bessel_function_type == BesselType.YN:
-        return scipy_bessel.yn_zeros(bessel_order, n_zeros)
-    elif bessel_function_type == BesselType.JNP:
-        zeros = scipy_bessel.jnp_zeros(bessel_order, n_zeros)
-        if bessel_order == 0:
-            # to match Matlab implementation
-            zeros[1:] = zeros[:-1]
-            zeros[0] = 0
-        return zeros
-    elif bessel_function_type == BesselType.YNP:
-        return scipy_bessel.ynp_zeros(bessel_order, n_zeros)
-    else:
-        raise NotImplementedError
 
 
 def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray) -> np.ndarray:
