@@ -127,7 +127,7 @@ class HankelTransform:
         self.alpha_n1 = alpha[-1]
 
         if k_grid is not None:
-            v_max = np.max(k_grid)
+            v_max = np.max(k_grid) / (2 * np.pi)
             max_radius = self.alpha_n1 / (2 * np.pi * v_max)
         self._max_radius = max_radius
 
