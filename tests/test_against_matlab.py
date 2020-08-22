@@ -2,10 +2,12 @@ import os
 
 import numpy as np
 import pytest
+import scipy.special as scipy_bessel
+
 matlab = pytest.importorskip('matlab')
 from matlab.engine import start_matlab  # noqa: E402
 
-from pyhank import BesselType, HankelTransformMode, bessel_zeros, HankelTransform  # noqa: E402
+from pyhank import HankelTransformMode, HankelTransform  # noqa: E402
 from pyhank.hankel import _spline  # noqa: E402
 
 
@@ -18,15 +20,14 @@ def engine():
     return engine
 
 
-@pytest.mark.parametrize("type_", range(1, 5))
 @pytest.mark.parametrize("order", [0, 1, 2, 3, 5, 6, 10])
 @pytest.mark.parametrize("n_zeros", [5, 20])
-def test_bessel_zeros(type_: int, order: int, n_zeros: int, engine):
+def test_bessel_zeros(order: int, n_zeros: int, engine):
     tolerance = 1e-5
-    matlab_zeros = engine.bessel_zeros(float(type_), float(order), float(n_zeros), float(tolerance),
+    matlab_zeros = engine.bessel_zeros(1.0, float(order), float(n_zeros), float(tolerance),
                                        nargout=1)
     matlab_zeros = np.asarray(matlab_zeros).transpose()[0, :]
-    python_zeros = bessel_zeros(BesselType(type_), order, n_zeros)
+    python_zeros = scipy_bessel.jn_zeros(order, n_zeros)
     assert np.allclose(matlab_zeros, python_zeros)
 
 
