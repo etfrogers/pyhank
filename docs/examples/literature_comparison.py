@@ -2,7 +2,8 @@
 Comparison against literature
 =============================
 
-Comparison of Pyhank against published results using the same method.
+This example is a comparison of PyHank against results from the
+original publication of the method.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,14 +22,15 @@ from pyhank import HankelTransform
 #
 # .. |Guizar| replace:: Guizar-Sicairos & Guitierrez-Vega
 #
-# First define the functions
+# First define python functions to calculate the sinc function and its transform
 #
 def sinc(x):
     return np.sin(x) / x
 
 
+# %%
+# Equation 12 of |Guizar|
 def hankel_transform_of_sinc(v):
-    # Equation 12 of |Guizar|
     ht = np.zeros_like(v)
     ht[v < gamma] = (v[v < gamma] ** p * np.cos(p * np.pi / 2)
                      / (2 * np.pi * gamma * np.sqrt(gamma ** 2 - v[v < gamma] ** 2)
@@ -39,7 +41,7 @@ def hankel_transform_of_sinc(v):
 
 
 # %%
-# Plot values of the hankel transform and the dynamical error as in figure 1 of |Guizar| `Guizar`_
+# Now plot the values of the hankel transform and the dynamical error as in figure 1 of |Guizar| `Guizar`_
 # for order 1 and 4
 for p in [1, 4]:
     transformer = HankelTransform(p, max_radius=3, n_points=256)
