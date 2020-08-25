@@ -18,12 +18,41 @@ class HankelTransformMode(IntEnum):
 class HankelTransform:
     r"""The main class for performing Hankel Transforms
 
+        For the QDHT to work, the function must be sampled a specific points, which this class generates
+        and stores in :attr:`HankelTransform.r`. Any transform on this grid will be sampled at points
+        :attr:`.HankelTransform.v` (frequency space) or equivalently :attr:`.HankelTransform.kr`
+        (angular frequency or wavenumber space).
+
+        The constructor has one required argument (``order``). The remaining four arguments offer
+        three different ways of specifying the radial (and therefore implicitly the frequency) points:
+
+        1. Supply both a maximum radius ``r_max`` and number of transform points ``n_points``
+        2. Supply the original (often equally spaced) ``radial_grid`` on which you have currently
+           have sample points. This approach allows easy conversion from the original grid using
+           :meth:`.HankelTransform.to_transform_r()`. ``t = HankelTransform(order, radial_grid=r)``
+           is effectively equivalent to ``t = HankelTransform(order, n_points=r.size, r_max=np.max(r))``
+           except for the fact the the original radial grid is stored in the :class:`.HankelTransform`
+           object for use in :meth:`~.HankelTransform.to_transform_r` and
+           :meth:`~.HankelTransform.to_original_r`.
+        3. Supply the original (often equally spaced) :math:`k`-space grid on which you
+           have currently have sample points. This is most use if you intend to do inverse
+           transforms. It allows easy conversion to and from the original grid using
+           :meth:`~.HankelTransform.to_original_k()` and :meth:`~.HankelTransform.to_transform_k()`.
+           As in option 2, :attr:`.HankelTransform.n_points` is determined by ``k_grid.size``.
+           :attr:`HankelTransform.r_max` is determined in a more complex way from ``np.max(k_grid)``.
+
         :parameter order: Transform order :math:`p`
         :type order: :class:`int`
-        :parameter max_radius: Radial extent of transform :math:`r_\textrm{max}`
+        :parameter max_radius: (Optional) Radial extent of transform :math:`r_\textrm{max}`
         :type max_radius: :class:`float`
-        :parameter n_points: Number of sample points :math:`N`
+        :parameter n_points: (Optional) Number of sample points :math:`N`
         :type n_points: :class:`int`
+        :parameter radial_grid: (Optional) The radial grid that will be used to sample input functions
+            it is used to set `N` and :math:`r_\textrm{max}` by ``n_points = radial_grid.size`` and
+            ``r_max = np.max(radial_grid)``
+        :type radial_grid: :class:`numpy.ndarray`
+        :parameter k_grid: (Optional) Number of sample points :math:`N`
+        :type k_grid: :class:`numpy.ndarray`
 
         :ivar alpha: The first :math:`N` Roots of the :math:`p` th order Bessel function.
         :ivar alpha_n1: (N+1)th root :math:`\alpha_{N1}`
@@ -43,21 +72,15 @@ class HankelTransform:
             Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
             J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
 
-        The algorithm also calls the function:
-
-        .. code-block:: python
-
-            alpha = bessel_zeros(BesselType.JN, order, n_points+1,)
-
-        where ``order`` and ``n_points`` are defined above, to calculate the roots of the bessel
-        function.
+        The algorithm also calls the function :func:`scipy.special.jn_zeros` to calculate
+        the roots of the bessel function.
 
         .. _scaling:
 
         .. admonition:: Scaling
 
             The :meth:`.HankelTransform.qdht` and :meth:`~.HankelTransform.iqdht` functions can accept
-            ``scaling`` argument (an instance of :class:`HankelTransformMode`) which allows
+            a ``scaling`` argument (an instance of :class:`HankelTransformMode`) which allows
             skipping the scaling that is otherwise necessary in the
             algorithm. For a use case when the same function is transformed multiple times,
             this can increase the speed of the algorithm. See
@@ -188,7 +211,7 @@ class HankelTransform:
         grid points used to construct the ``HankelTransform`` object onto the grid required
         of use in the QDHT algorithm.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
+        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
         grid in radius, then it needs the function to transform to be sampled at a specific
         grid before it can be passed to :meth:`.HankelTransform.qdht`. This method provides
         a convenient way of doing this.
@@ -208,7 +231,7 @@ class HankelTransform:
         ``self.r`` (as returned by :meth:`HankelTransform.iqdht`) back onto the original grid
         used to construct the ``HankelTransform`` object.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
+        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
         grid in radius, it may be useful to convert back to this grid after a IQDHT.
         This method provides a convenient way of doing this.
 
@@ -226,8 +249,8 @@ class HankelTransform:
         grid points used to construct the ``HankelTransform`` object onto the grid required
         of use in the IQDHT algorithm.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
-        grid in k, then it needs the function to transform to be sampled at a specific
+        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
+        grid in :math:`k`, then it needs the function to transform to be sampled at a specific
         grid before it can be passed to :meth:`.HankelTransform.iqdht`. This method provides
         a convenient way of doing this.
 
@@ -247,8 +270,8 @@ class HankelTransform:
         ``self.k`` (as returned by :meth:`HankelTransform.qdht`) back onto the original grid
         used to construct the ``HankelTransform`` object.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally spaced
-        grid in k, it may be useful to convert back to this grid after a QDHT.
+        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
+        grid in :math:`k`, it may be useful to convert back to this grid after a QDHT.
         This method provides a convenient way of doing this.
 
         :parameter function: The function to be interpolated. Specified at the radial points
@@ -278,7 +301,8 @@ class HankelTransform:
 
         :parameter fr: Function in real space as a function of radius (sampled at ``self.r``)
         :type fr: :class:`numpy.ndarray`
-        :parameter scaling: (optional) Parameter to control the scaling of input and output. See Scaling above
+        :parameter scaling: (optional) Parameter to control the scaling of input and output. See
+            :ref:`Scaling <scaling>` above
         :type scaling: :class:`.HankelTransformMode`
 
         :return: Function in frequency space (sampled at ``self.v``)
@@ -312,7 +336,8 @@ class HankelTransform:
 
         :parameter fv: Function in frequency space (sampled at self.v)
         :type fv: :class:`numpy.ndarray`
-        :parameter scaling: (optional) Parameter to control the scaling of input and output. See Scaling above
+        :parameter scaling: (optional) Parameter to control the scaling of input and output. See
+            :ref:`Scaling <scaling>` above
         :type scaling: :class:`.HankelTransformMode`
 
         :return: Radial function (sampled at self.r) = IHT(fv)

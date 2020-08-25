@@ -7,9 +7,9 @@ from pyhank import HankelTransform
 
 def qdht(r: np.ndarray, f: np.ndarray, order: int = 0) -> Tuple[np.ndarray, np.ndarray]:
     """Perform a quasi-discrete Hankel transform of the function ``f`` (sampled at points
-    ``r``) and return the transformed function and its sample points in k-space.
+    ``r``) and return the transformed function and its sample points in :math:`k`-space.
 
-    If you requires the transform on a frequency axis (as opposed to the k-axis), the
+    If you requires the transform on a frequency axis (as opposed to the :math:`k`-axis), the
     frequency axis :math:`v` can be calculated using :math:`v = \\frac{k}{2\\pi}`.
 
     .. warning::
@@ -37,8 +37,8 @@ def iqdht(k: np.ndarray, f: np.ndarray, order: int = 0) -> Tuple[np.ndarray, np.
     """Perform a inverse quasi-discrete Hankel transform of the function ``f`` (sampled at points
     ``k``) and return the transformed function and its sample points in radial space.
 
-    If you have the transform on a frequency axis (as opposed to a k-axis), the
-    k-axis can be calculated using :math:`k = 2\\pi{}f`.
+    If you have the transform on a frequency axis (as opposed to a :math:`k`-axis), the
+    :math:`k`-axis can be calculated using :math:`k = 2\\pi{}f`.
 
     .. warning::
         This method is a convenience wrapper for :meth:`.HankelTransform.iqdht`, but incurs a
@@ -47,7 +47,7 @@ def iqdht(k: np.ndarray, f: np.ndarray, order: int = 0) -> Tuple[np.ndarray, np.
         construct a single :class:`.HankelTransform` object and call
         :meth:`.HankelTransform.iqdht` multiple times.
 
-    :param k: The k coordinates at which the function is sampled
+    :param k: The :math:`k` coordinates at which the function is sampled
     :type k: :class:`numpy.ndarray`
     :param f: The value of the function to be transformed.
     :type f: :class:`numpy.ndarray`
