@@ -21,7 +21,11 @@ PyHank is a python implementation of the quasi-discrete Hankel transform as deve
   Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
   J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
 
-It was inspired by Adam Wyatt's [Matlab version](https://uk.mathworks.com/matlabcentral/fileexchange/15623-hankel-transform) which I used for many years, before moving to Python and needing my own implementation. It aims to simplify the interface (using Python's object-oriented approach).
+It was designed for use primarily in cases where a discrete Hankel transform is required, similar to the FFT for a Fourier transform. It operates on functions stored in NumPy arrays. If you want an Hankel transform that operates on a callable function, you may be interested in [hankel](<https://github.com/steven-murray/hankel>) by Steven Murray.
+
+I have used this code extensively for beam-propagation-method calculations of radially-symmetric beams. In the radially symmetric case, the 2D FFT over x and y that would be used in a non-symmetric system is replaced by a 1D QDHT over r, making the computational load much lighter and allowing bigger simulations.
+
+PyHank was inspired by Adam Wyatt's [Matlab version](https://uk.mathworks.com/matlabcentral/fileexchange/15623-hankel-transform) which I used for many years, before moving to Python and needing my own implementation. It aims to simplify the interface (using Python's object-oriented approach) and utilise existing NumPy/SciPy functions wherever possible.
 
 It has both a simple single-shot interface, and a more advanced approach that speeds up computation significantly if making multiple transforms on the same grid.
 
