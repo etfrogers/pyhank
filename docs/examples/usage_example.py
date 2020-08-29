@@ -40,13 +40,13 @@ lambda_ = 488e-9  # wavelength 488nm
 k0 = 2 * np.pi / lambda_  # Vacuum k vector
 
 # %%
-# Set up a ``HankelTransform`` object, telling it the order (``0``) and
-# the radial grid parameters.
+# Set up a :class:`.HankelTransform` object, telling it the order (``0``) and
+# the radial grid.
 H = HankelTransform(order=0, radial_grid=r)
 
 # %%
-# Set up the electric field profile at :math:`z = 0`, and resample it so that
-# it is ready for transform.
+# Set up the electric field profile at :math:`z = 0`, and resample onto the correct radial grid
+# (``transformer.r``) as required for the QDHT.
 Er = gauss1d(r, 0, Dr)   # Initial field
 ErH = H.to_transform_r(Er)  # Resampled field
 
@@ -68,7 +68,7 @@ EkrH_ = EkrH / H.JV
 # Do the propagation in a loop over :math:`z`
 
 # Pre-allocate an array for field as a function of r and z
-Erz = np.zeros((nr, Nz))
+Erz = np.zeros((nr, Nz), dtype=complex)
 kz = np.sqrt(k0 ** 2 - H.kr ** 2)
 for i, z_loop in enumerate(z):
     phi_z = kz * z_loop  # Propagation phase
@@ -100,7 +100,7 @@ plt.axis([0, 3e4, 0, np.max(np.abs(EkrH) ** 2)])
 
 # %%
 # Now plot an image showing the intensity as a function of
-# radius and propagation distance
+# radius and propagation distance.
 
 plt.figure()
 imagesc(z * 1e3, r * 1e3, Irz)
@@ -112,7 +112,7 @@ plt.ylim([0, 1])
 # %%
 # The plot above shows a reduction of intensity with :math:`z`, but it is
 # bit difficult to see the beam growing in :math:`r`. To show that, let's
-# plot the intensity normalised so that the peak intensity at each :math:`z`
+# plot the intensity normalised such that the peak intensity at each :math:`z`
 # coordinate is the same.
 Irz_norm = Irz / Irz[0, :]
 

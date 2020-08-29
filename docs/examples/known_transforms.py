@@ -8,12 +8,12 @@ from various sources.
 First we demonstrate the Gaussian function from Pissens [#Pissens]_ and its
 inverse transform.
 
-Then we look the "generalised top-hat" and "generalised jinc"
+Then we check the "generalised top-hat" and "generalised jinc"
 functions from Guizar-Sicairos and Guitierrez-Vega [#Guizar]_.
 
 Finally, we look at the function :math:`f(r) = \\frac{1}{r^2 + a^2}`,
 the Hankel transform of which is :math:`K_0(av)`, where :math:`K_0`
-is the modified Bessel function of the second kind of order 0.
+is the modified Bessel function of the second kind of order 0. [#Pissens]_
 
 
 .. [#Pissens] *“Chapter 9: The Hankel Transform.”* Piessens, R.
@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 from pyhank import qdht, iqdht, HankelTransform
 
 # %%
-# First we try a Gaussian function (the Hankel transform of which should also be Gaussian
+# First we try a Gaussian function, the Hankel transform of which should also be Gaussian.
 #
 # Note the definition in Guizar-Sicairos [#Guizar]_ varies from that used by
 # Pissens [#Pissens]_ by a factor of :math:`2\pi` in
@@ -85,9 +85,9 @@ plt.tight_layout()
 
 # %%
 # Next we define functions to calculate the generalised top-hat and jinc
-# functions, as defined by Guizar-Sicairos and Guitierrez-Vega [#Guizar]_
+# functions, as defined by Guizar-Sicairos and Guitierrez-Vega [#Guizar]_.
 #
-# Note that for :math:`p=0` these become a standard top-hat and jinc
+# Note that for :math:`p=0` these become a standard top-hat and
 # :math:`\textrm{jinc}(r) = \frac{J_1(r)}{r}` functions.
 
 def generalised_top_hat(r: np.ndarray, a: float, p: int) -> np.ndarray:
@@ -114,7 +114,7 @@ def generalised_jinc(v: np.ndarray, a: float, p: int):
 # For demonstration, we choose :math:`a = 0.5` and run the code for
 # orders 0, 1 and 4 plotting and checking the mean absolute error each time.
 # First check that the Hankel transform of the generalised jinc is calculated
-# correctly
+# correctly.
 
 radius = np.linspace(0, 30, 1024)
 a = 0.5
@@ -143,7 +143,7 @@ for order in [0, 1, 4]:
 
 # %%
 # Now we repeat but the other way round: the Hankel transform of the top-hat
-# function should be the jinc function
+# function should be the jinc function.
 radius = np.linspace(0, 2, 1024)
 for order in [0, 1, 4]:
     transformer = HankelTransform(order=order, radial_grid=radius)
@@ -171,9 +171,9 @@ for order in [0, 1, 4]:
 
 # %%
 # Now we investigate the function :math:`f(r) = \\frac{1}{r^2 + a^2}`,
-# the Hankel transform of which is :math:`K_0(av)`
+# the Hankel transform of which is :math:`K_0(av)`.
 #
-# Note again the scaling factor of :math:`2\pi`
+# Note again the scaling factor of :math:`2\pi`.
 
 a = 1
 radius = np.linspace(0, 50, 1024)

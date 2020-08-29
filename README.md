@@ -11,6 +11,9 @@ PyHank - Quasi-Discrete Hankel Transforms for Python
 
 [![Coverage](https://codecov.io/gh/etfrogers/pyhank/branch/master/graph/badge.svg)](https://codecov.io/gh/etfrogers/pyhank)
 
+[![PyPI version](https://badge.fury.io/py/pyhank.svg)](https://badge.fury.io/py/pyhank)
+
+[![Code style - flake 8](https://img.shields.io/badge/code%20style-flake8-brightgreen)](https://flake8.pycqa.org/en/latest/)
 
 PyHank is a python implementation of the quasi-discrete Hankel transform as developed by Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
 

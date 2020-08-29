@@ -15,15 +15,15 @@ recommended.
 """
 
 # %%
-# First import the ``qdht`` function and other packages
+# First import the ``qdht`` function and other packages.
 from pyhank import qdht
 import numpy as np
 import scipy.special
 import matplotlib.pyplot as plt
 
 # %%
-# Create a grid for :math:`r` points and calculate the jinc function
-# The calculation fails at :math:`r = 0`, so we have to set that manually to the limit
+# Create a grid for :math:`r` points and calculate the jinc function.
+# The calculation fails at :math:`r = 0`, so we have to set that manually to the limit of :math:`1/2`.
 r = np.linspace(0, 100, 1024)
 f = np.zeros_like(r)
 f[1:] = scipy.special.jv(1, r[1:]) / r[1:]
@@ -34,7 +34,7 @@ plt.plot(r, f)
 plt.xlabel('Radius /m')
 
 # %%
-# Now take the Hankel transform using ``qdht``
+# Now take the Hankel transform using ``qdht``:
 kr, ht = qdht(r, f)
 
 plt.figure()
@@ -43,4 +43,4 @@ plt.xlim([0, 5])
 plt.xlabel('Radial wavevector /m$^{-1}$')
 
 # %%
-# As expected, this is a top-hat function bandlimited to :math:`k<1`, except for numerical error
+# As expected, this is a top-hat function bandlimited to :math:`k<1`, except for numerical error.
