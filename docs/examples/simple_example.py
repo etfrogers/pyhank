@@ -23,10 +23,11 @@ import scipy.special
 import matplotlib.pyplot as plt
 
 # %%
-# Create a ``HankelTransform`` object which holds the grid for :math:`r` and
-# :math:`k_r` points and calculate the jinc function
-# Although the calculation fails at :math:`r = 0`, ``transformer.r`` does
-# not include :math:`r=0`
+# Create a :class:`.HankelTransform` object which holds the grid for :math:`r` and
+# :math:`k_r` points and calculate the jinc function.
+#
+# Note that although the calculation fails at :math:`r = 0`, ``transformer.r`` does
+# not include :math:`r=0`.
 transformer = HankelTransform(order=0, max_radius=100, n_points=1024)
 f = scipy.special.jv(1, transformer.r) / transformer.r
 
@@ -44,4 +45,4 @@ plt.xlim([0, 5])
 plt.xlabel('Radial wavevector /m$^{-1}$')
 
 # %%
-# As expected, this is a top-hat function bandlimited to :math:`k<1`, except for numerical error
+# As expected, this is a top-hat function bandlimited to :math:`k<1`, except for numerical error.
