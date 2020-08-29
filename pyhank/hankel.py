@@ -283,6 +283,7 @@ class HankelTransform:
         """
         return _spline(self.kr, function, self.original_k_grid)
 
+    @profile
     def qdht(self, fr: np.ndarray,
              scaling: HankelTransformMode = HankelTransformMode.UNSCALED) -> np.ndarray:
         r"""QDHT: Quasi Discrete Hankel Transform
@@ -322,6 +323,7 @@ class HankelTransform:
             raise NotImplementedError
         return fv
 
+    @profile
     def iqdht(self, fv: np.ndarray,
               scaling: HankelTransformMode = HankelTransformMode.UNSCALED) -> np.ndarray:
         r"""IQDHT: Inverse Quasi Discrete Hankel Transform
