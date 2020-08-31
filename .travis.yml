@@ -3,8 +3,12 @@ python:
   - "3.6"      # current default Python on Travis CI
   - "3.7"
   - "3.8"
+env:
+  - OLDEST_VERSIONS=1
+  - OLDEST_VERSIONS=0
 # command to install dependencies
 install:
+  - if [ $OLDEST_VERSIONS -eq 1 ]; then sed -i 's/~=/==/g' requirements.txt; fi
   - pip install -r dev_requirements.txt
 # command to run tests
 script:
@@ -12,6 +16,10 @@ script:
   - python3 setup.py sdist bdist_wheel
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+exclude:
+  - python: "3.8"
+    env: OLDEST_VERSIONS=1
+
 jobs:
   include:
     - stage: Documenation
