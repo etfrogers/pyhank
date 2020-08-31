@@ -1,18 +1,8 @@
-from enum import IntEnum
 from typing import Tuple
 
 import numpy as np
 import scipy.special as scipy_bessel
 from scipy import interpolate
-
-
-class HankelTransformMode(IntEnum):
-    """Enum class specifying the scaling of the functions used in the Hankel
-    transform. See :ref:`Scaling <scaling>` for details of usage"""
-    BOTH_SCALED = 0  #:
-    FV_SCALED = 1  #:
-    FR_SCALED = 2  #:
-    UNSCALED = 3  #:
 
 
 class HankelTransform:
@@ -74,47 +64,6 @@ class HankelTransform:
 
         The algorithm also calls the function :func:`scipy.special.jn_zeros` to calculate
         the roots of the bessel function.
-
-        .. _scaling:
-
-        .. admonition:: Scaling
-
-            The :meth:`.HankelTransform.qdht` and :meth:`~.HankelTransform.iqdht` functions can accept
-            a ``scaling`` argument (an instance of :class:`HankelTransformMode`) which allows
-            skipping the scaling that is otherwise necessary in the
-            algorithm. For a use case when the same function is transformed multiple times,
-            this can increase the speed of the algorithm. See
-            :ref:`the speed of usage examples <sphx_glr_auto_examples_speed_usage_example.py>`
-            for an example of this.
-
-            If the ``scaling`` argument is passed to :meth:`~.HankelTransform.qdht` and
-            :meth:`~.HankelTransform.iqdht` then the following equations are used, where
-            :math:`\mathbf{T}` is the transform matrix :attr:`.HankelTransform.T`
-
-            :attr:`~.HankelTransformMode.BOTH_SCALED`
-                :math:`f_r` & :math:`f_v` are the scaled functions (i.e. fr./self.JR & fv./self.JV)
-
-                .. math::
-                    f_v = \mathbf{T} \times f_r \quad f_r = \mathbf{T} \times f_v
-
-            :attr:`~.HankelTransformMode.FV_SCALED`
-                :math:`f_v` is the scaled function, :math:`f_r` is the real function
-
-                .. math::
-                    f_v = \mathbf{T} \times (f_r / J_R) \quad f_r = (\mathbf{T} \times f_v) \times J_R
-
-            :attr:`~.HankelTransformMode.FR_SCALED`
-                :math:`f_r` is the scaled function, :math:`f_v` is the real function
-
-                .. math::
-                    f_v = (\mathbf{T} \times f_r) \times J_V \quad f_r = \mathbf{T} \times (f_v / J_V)
-
-            :attr:`~.HankelTransformMode.UNSCALED` (**default**)
-                :math:`f_r`, :math:`f_v` are the real distributions.
-
-                .. math::
-                    f_v = (\mathbf{T} \times (f_r / J_R)) \times J_V \quad
-                    f_r = (\mathbf{T} \times (f_v / J_V)) \times J_R
         """
 
     def __init__(self, order: int, max_radius: float = None, n_points: int = None,
@@ -137,7 +86,7 @@ class HankelTransform:
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
         else:
-            raise ValueError(usage)
+            raise ValueError(usage)  # pragma: no cover - backup case: cannot currently be reached
 
         self._order = order
         self._n_points = n_points
@@ -283,8 +232,7 @@ class HankelTransform:
         """
         return _spline(self.kr, function, self.original_k_grid)
 
-    def qdht(self, fr: np.ndarray,
-             scaling: HankelTransformMode = HankelTransformMode.UNSCALED) -> np.ndarray:
+    def qdht(self, fr: np.ndarray) -> np.ndarray:
         r"""QDHT: Quasi Discrete Hankel Transform
 
         Performs the Hankel transform of a function of radius, returning
@@ -297,33 +245,18 @@ class HankelTransform:
             The input function must be sampled at the points ``self.r``, and the output
             will be sampled at the points ``self.v`` (or equivalently ``self.kr``)
 
-        See :ref:`Scaling <scaling>` above for a description of the effect of ``scaling``
-
         :parameter fr: Function in real space as a function of radius (sampled at ``self.r``)
         :type fr: :class:`numpy.ndarray`
-        :parameter scaling: (optional) Parameter to control the scaling of input and output. See
-            :ref:`Scaling <scaling>` above
-        :type scaling: :class:`.HankelTransformMode`
 
         :return: Function in frequency space (sampled at ``self.v``)
         :rtype: :class:`numpy.ndarray`
         """
         jr, jv = self._get_scaling_factors(fr)
 
-        if scaling == HankelTransformMode.FV_SCALED:
-            fv = np.matmul(self.T, (fr / jr))
-        elif scaling == HankelTransformMode.FR_SCALED:
-            fv = jv * np.matmul(self.T, fr)
-        elif scaling == HankelTransformMode.UNSCALED:
-            fv = jv * np.matmul(self.T, (fr / jr))
-        elif scaling == HankelTransformMode.BOTH_SCALED:
-            fv = np.matmul(self.T, fr)
-        else:
-            raise NotImplementedError
+        fv = jv * np.matmul(self.T, (fr / jr))
         return fv
 
-    def iqdht(self, fv: np.ndarray,
-              scaling: HankelTransformMode = HankelTransformMode.UNSCALED) -> np.ndarray:
+    def iqdht(self, fv: np.ndarray) -> np.ndarray:
         r"""IQDHT: Inverse Quasi Discrete Hankel Transform
 
         Performs the inverse Hankel transform of a function of frequency, returning
@@ -332,40 +265,22 @@ class HankelTransform:
         .. math::
             f_r(r) = \mathcal{H}^{-1}\{f_v(v)\}
 
-        See :ref:`Scaling <scaling>` above for a description of the effect of ``scaling``
-
         :parameter fv: Function in frequency space (sampled at self.v)
         :type fv: :class:`numpy.ndarray`
-        :parameter scaling: (optional) Parameter to control the scaling of input and output. See
-            :ref:`Scaling <scaling>` above
-        :type scaling: :class:`.HankelTransformMode`
 
         :return: Radial function (sampled at self.r) = IHT(fv)
         :rtype: :class:`numpy.ndarray`
         """
         jr, jv = self._get_scaling_factors(fv)
-
-        if scaling == HankelTransformMode.FR_SCALED:
-            fr = np.matmul(self.T, (fv / jv))
-        elif scaling == HankelTransformMode.FV_SCALED:
-            fr = np.matmul(self.T, fv) * jr
-        elif scaling == HankelTransformMode.UNSCALED:
-            fr = jr * np.matmul(self.T, (fv / jv))
-        elif scaling == HankelTransformMode.BOTH_SCALED:
-            fr = np.matmul(self.T, fv)
-        else:
-            raise NotImplementedError
+        fr = jr * np.matmul(self.T, (fv / jv))
         return fr
 
-    def _get_scaling_factors(self, fr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _get_scaling_factors(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         try:
-            n2 = fr.shape[1]
-        except IndexError:
-            n2 = 1
-        if n2 > 1:
+            n2 = f.shape[1]
             jr = self.JR[:, np.newaxis] * np.ones((1, n2))
             jv = self.JV[:, np.newaxis] * np.ones((1, n2))
-        else:
+        except IndexError:
             jr = self.JR
             jv = self.JV
         return jr, jv

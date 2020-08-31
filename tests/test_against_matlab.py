@@ -7,7 +7,7 @@ import scipy.special as scipy_bessel
 matlab = pytest.importorskip('matlab')
 from matlab.engine import start_matlab  # noqa: E402
 
-from pyhank import HankelTransformMode, HankelTransform  # noqa: E402
+from pyhank import HankelTransform  # noqa: E402
 from pyhank.hankel import _spline  # noqa: E402
 
 
@@ -48,8 +48,7 @@ def test_hankel_matrix(engine):
             f"Hankel matrix key {key} doesn't match"
 
 
-@pytest.mark.parametrize('scaling', HankelTransformMode)
-def test_qdht(engine, scaling: HankelTransformMode):
+def test_qdht(engine):
     r_max = 5e-3
     nr = 512
     h = HankelTransform(0, r_max, nr)
@@ -63,13 +62,12 @@ def test_qdht(engine, scaling: HankelTransformMode):
     # noinspection PyUnresolvedReferences
     er_m = matlab.double(er[np.newaxis, :].transpose().tolist())
 
-    matlab_value = engine.qdht(er_m, hm, float(scaling), nargout=1)
-    python_value = h.qdht(er, scaling)
+    matlab_value = engine.qdht(er_m, hm, float(3), nargout=1)
+    python_value = h.qdht(er)
     assert matlab_python_allclose(python_value, matlab_value)
 
 
-@pytest.mark.parametrize('scaling', HankelTransformMode)
-def test_iqdht(engine, scaling: HankelTransformMode):
+def test_iqdht(engine):
     r_max = 5e-3
     nr = 512
     h = HankelTransform(0, r_max, nr)
@@ -83,10 +81,10 @@ def test_iqdht(engine, scaling: HankelTransformMode):
     # noinspection PyUnresolvedReferences
     er_m = matlab.double(er[np.newaxis, :].transpose().tolist())
 
-    matlab_mode = float(scaling)
+    matlab_mode = float(3)
 
     matlab_value = engine.iqdht(er_m, hm, matlab_mode, nargout=1)
-    python_value = h.iqdht(er, scaling)
+    python_value = h.iqdht(er)
     assert matlab_python_allclose(python_value, matlab_value)
 
 
@@ -130,18 +128,16 @@ def example():
     field = gauss1d(r, 0, beam_radius) * np.exp(1j * propagation_direction * r)  # Initial field
     ht_field = ht.to_transform_r(field)  # Resampled field
 
-    transform = ht.qdht(ht_field, HankelTransformMode.UNSCALED)  # Convert from physical field to physical wavevector
-
-    scaled_transform = transform / ht.JV  # Convert to scaled form for faster transform
+    transform = ht.qdht(ht_field)  # Convert from physical field to physical wavevector
 
     propagated_intensity = np.zeros((nr, Nz + 1))
     propagated_intensity[:, 0] = np.abs(field) ** 2
     for n in range(1, Nz):
         z_loop = z[n]
         propagation_phase = (np.sqrt(k_max ** 2 - ht.kr ** 2) - k_max) * z_loop  # Propagation phase
-        propagated_transform = scaled_transform * np.exp(1j * propagation_phase)  # Apply propagation
-        propagated_ht_field = ht.iqdht(propagated_transform, HankelTransformMode.BOTH_SCALED)  # iQDHT (no scaling)
-        propagated_field = _spline(ht.r, propagated_ht_field * ht.JR, r)  # Interpolate & scale output
+        propagated_transform = transform * np.exp(1j * propagation_phase)  # Apply propagation
+        propagated_ht_field = ht.iqdht(propagated_transform)  # iQDHT
+        propagated_field = _spline(ht.r, propagated_ht_field, r)  # Interpolate output
         propagated_intensity[:, n] = np.abs(propagated_field) ** 2
 
     return transform, propagated_intensity
