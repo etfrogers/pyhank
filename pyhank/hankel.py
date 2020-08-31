@@ -278,12 +278,9 @@ class HankelTransform:
     def _get_scaling_factors(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         try:
             n2 = f.shape[1]
-        except IndexError:
-            n2 = 1
-        if n2 > 1:
             jr = self.JR[:, np.newaxis] * np.ones((1, n2))
             jv = self.JV[:, np.newaxis] * np.ones((1, n2))
-        else:
+        except IndexError:
             jr = self.JR
             jv = self.JV
         return jr, jv
