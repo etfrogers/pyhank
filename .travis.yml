@@ -16,11 +16,13 @@ script:
   - python3 setup.py sdist bdist_wheel
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-exclude:
-  - python: "3.8"
-    env: OLDEST_VERSIONS=1
 
 jobs:
+  exclude:
+    - python: "3.8"
+      env: OLDEST_VERSIONS=1
+    - python: "3.7"
+      env: OLDEST_VERSIONS=1
   include:
     - stage: Documenation
       python: "3.7"
