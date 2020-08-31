@@ -86,7 +86,7 @@ class HankelTransform:
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
         else:
-            raise ValueError(usage)
+            raise ValueError(usage)  # pragma: no cover - backup case: cannot currently be reached
 
         self._order = order
         self._n_points = n_points

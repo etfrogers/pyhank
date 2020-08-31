@@ -83,6 +83,14 @@ def test_round_trip(radius: np.ndarray, transformer: HankelTransform):
     assert np.allclose(func, reconstructed)
 
 
+@pytest.mark.parametrize('two_d_size', [1, 100, 27])
+def test_round_trip_2d(two_d_size: int, radius: np.ndarray, transformer: HankelTransform):
+    func = np.random.random((radius.size, two_d_size))
+    ht = transformer.qdht(func)
+    reconstructed = transformer.iqdht(ht)
+    assert np.allclose(func, reconstructed)
+
+
 @pytest.mark.parametrize('shape', smooth_shapes)
 def test_round_trip_with_interpolation(shape: Callable,
                                        radius: np.ndarray,
