@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import scipy.special as scipy_bessel
 
-from pyhank import HankelTransform, HankelTransformMode
+from pyhank import HankelTransform
 
 
 smooth_shapes = [lambda r: np.exp(-r ** 2),
@@ -43,68 +43,18 @@ def transformer(request, radius) -> HankelTransform:
     return HankelTransform(order, radial_grid=radius)
 
 
-# noinspection DuplicatedCode
-@pytest.mark.parametrize('two_d_input', [True, False])
-@pytest.mark.parametrize('scaling', HankelTransformMode)
-def test_scaling(radius: np.ndarray, scaling: HankelTransformMode,
-                 transformer: HankelTransform, two_d_input: bool):
-    if two_d_input:
-        func = np.random.random([radius.size, 10])
-        jr = transformer.JR[:, np.newaxis]
-        jv = transformer.JV[:, np.newaxis]
-    else:
-        func = np.random.random(radius.shape)
-        jr = transformer.JR
-        jv = transformer.JV
-
-    if scaling in (HankelTransformMode.FR_SCALED, HankelTransformMode.BOTH_SCALED):
-        scaled_func = func / jr
-    else:
-        scaled_func = func
-    ht = transformer.qdht(scaled_func, scaling)
-
-    if scaling in (HankelTransformMode.FV_SCALED, HankelTransformMode.BOTH_SCALED):
-        ht = ht * jv
-
-    assert np.allclose(ht, transformer.qdht(func))
-
-
-# noinspection DuplicatedCode
-@pytest.mark.parametrize('two_d_input', [True, False])
-@pytest.mark.parametrize('scaling', HankelTransformMode)
-def test_inverse_scaling(radius: np.ndarray, scaling: HankelTransformMode,
-                         transformer: HankelTransform, two_d_input: bool):
-    if two_d_input:
-        func = np.random.random([radius.size, 10])
-        jr = transformer.JR[:, np.newaxis]
-        jv = transformer.JV[:, np.newaxis]
-    else:
-        func = np.random.random(radius.shape)
-        jr = transformer.JR
-        jv = transformer.JV
-
-    if scaling in (HankelTransformMode.FV_SCALED, HankelTransformMode.BOTH_SCALED):
-        scaled_func = func / jv
-    else:
-        scaled_func = func
-    iht = transformer.iqdht(scaled_func, scaling)
-
-    if scaling in (HankelTransformMode.FR_SCALED, HankelTransformMode.BOTH_SCALED):
-        iht = iht * jr
-    assert np.allclose(iht, transformer.iqdht(func))
-
-
 @pytest.mark.parametrize('shape', all_shapes)
 def test_parsevals_theorem(shape: Callable,
                            radius: np.ndarray,
                            transformer: HankelTransform):
     # As per equation 11 of Guizar-Sicairos, the UNSCALED transform is unitary,
     # i.e. if we pass in the unscaled fr (=Fr), the unscaled fv (=Fv)should have the
-    # same sum of abs val^2
+    # same sum of abs val^2. Here the unscale transform is simply given by
+    # ht = transformer.T @ func
     func = shape(radius)
     intensity_before = np.abs(func)**2
     energy_before = np.sum(intensity_before)
-    ht = transformer.qdht(func, HankelTransformMode.BOTH_SCALED)
+    ht = transformer.T @ func
     intensity_after = np.abs(ht)**2
     energy_after = np.sum(intensity_after)
     assert np.isclose(energy_before, energy_after)
@@ -126,12 +76,10 @@ def test_energy_conservation(shape: Callable,
     assert np.isclose(energy_before, energy_after, rtol=0.01)
 
 
-@pytest.mark.parametrize('scaling', HankelTransformMode)
-def test_round_trip(radius: np.ndarray, scaling: HankelTransformMode,
-                    transformer: HankelTransform):
+def test_round_trip(radius: np.ndarray, transformer: HankelTransform):
     func = np.random.random(radius.shape)
-    ht = transformer.qdht(func, scaling)
-    reconstructed = transformer.iqdht(ht, scaling)
+    ht = transformer.qdht(func)
+    reconstructed = transformer.iqdht(ht)
     assert np.allclose(func, reconstructed)
 
 

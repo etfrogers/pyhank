@@ -1,4 +1,4 @@
-from .hankel import HankelTransform, HankelTransformMode
+from .hankel import HankelTransform
 from .one_shot import qdht, iqdht
 
-__all__ = [HankelTransform, HankelTransformMode, qdht, iqdht]
+__all__ = [HankelTransform, qdht, iqdht]

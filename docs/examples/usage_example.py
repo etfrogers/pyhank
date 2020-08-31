@@ -17,7 +17,7 @@ import numpy as np
 
 # %%
 # Then the functions from this package
-from pyhank import HankelTransform, HankelTransformMode
+from pyhank import HankelTransform
 from helper import gauss1d, imagesc
 
 
@@ -55,16 +55,11 @@ ErH = H.to_transform_r(Er)  # Resampled field
 # ------------------------
 
 # Convert from physical field to physical wavevector
-EkrH = H.qdht(ErH, HankelTransformMode.UNSCALED)
+EkrH = H.qdht(ErH)
 
 # %%
 # Propagate the beam
 # ------------------
-# Convert to scaled form for faster transform. See
-# :ref:`Scaling <scaling>` for an explanation of this.
-EkrH_ = EkrH / H.JV
-
-# %%
 # Do the propagation in a loop over :math:`z`
 
 # Pre-allocate an array for field as a function of r and z
@@ -72,9 +67,9 @@ Erz = np.zeros((nr, Nz), dtype=complex)
 kz = np.sqrt(k0 ** 2 - H.kr ** 2)
 for i, z_loop in enumerate(z):
     phi_z = kz * z_loop  # Propagation phase
-    EkrHz = EkrH_ * np.exp(1j * phi_z)  # Apply propagation
-    ErHz = H.iqdht(EkrHz, HankelTransformMode.BOTH_SCALED)  # iQDHT (no scaling)
-    Erz[:, i] = H.to_original_r(ErHz * H.JR)  # Interpolate & scale output
+    EkrHz = EkrH * np.exp(1j * phi_z)  # Apply propagation
+    ErHz = H.iqdht(EkrHz)  # iQDHT
+    Erz[:, i] = H.to_original_r(ErHz)  # Interpolate output
 Irz = np.abs(Erz) ** 2
 
 # %%
