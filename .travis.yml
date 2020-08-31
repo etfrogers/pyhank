@@ -12,8 +12,17 @@ script:
   - python3 setup.py sdist bdist_wheel
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
 jobs:
   include:
+    - name: "Numpy 1.15/SciPy 1.0"
+      python: "3.6"
+      install:
+        - sed -i 's/~=/==/g' requirements.txt
+        - pip install -r dev_requirements.txt
+      script:
+        - pytest --flake8
+        - python3 setup.py sdist bdist_wheel
     - stage: Documenation
       python: "3.7"
       install:
