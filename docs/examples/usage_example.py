@@ -8,6 +8,10 @@ of propagating a radially-symmetric beam using the beam propagation method.
 In this case, it will be a simple Gaussian beam propagating way from focus and
 diverging.
 
+First we will use a loop over :math:`z` position, and then we will demonstrate
+the vectorisation of the :func:`.HankelTransforms.iqdht` (and
+:func:`~.HankelTransforms.qdht`) functions.
+
 """
 
 # %%
@@ -18,6 +22,7 @@ import numpy as np
 # %%
 # Then the functions from this package
 from pyhank import HankelTransform
+# noinspection PyUnresolvedReferences
 from helper import gauss1d, imagesc
 
 
@@ -58,8 +63,8 @@ ErH = H.to_transform_r(Er)  # Resampled field
 EkrH = H.qdht(ErH)
 
 # %%
-# Propagate the beam
-# ------------------
+# Propagate the beam - loop
+# -------------------------
 # Do the propagation in a loop over :math:`z`
 
 # Pre-allocate an array for field as a function of r and z
@@ -116,3 +121,27 @@ imagesc(z * 1e3, r * 1e3, Irz_norm)
 plt.xlabel('Propagation distance ($z$) /mm')
 plt.ylabel('Radial position ($r$) /mm')
 plt.ylim([0, 1])
+
+
+# %%
+# Propagate the beam - vectorised
+# -------------------------------
+kz = np.sqrt(k0 ** 2 - H.kr ** 2)
+phi_z = kz[:, np.newaxis] * z[np.newaxis, :]  # Propagation phase
+EkrHz = EkrH[:, np.newaxis] * np.exp(1j * phi_z)  # Apply propagation
+ErHz = H.iqdht(EkrHz)  # iQDHT
+Erz = H.to_original_r(ErHz)  # Interpolate output
+Irz_vectorised = np.abs(Erz) ** 2
+
+# %%
+# Now plot the result to check it is the same as the loop approach
+plt.figure()
+imagesc(z * 1e3, r * 1e3, Irz_vectorised)
+plt.title('Radial field intensity as a function of propagation for annular beam')
+plt.xlabel('Propagation distance ($z$) /mm')
+plt.ylabel('Radial position ($r$) /mm')
+plt.ylim([0, 1])
+
+# %%
+# Assert the two approaches produce the same intensity
+assert np.allclose(Irz, Irz_vectorised)
