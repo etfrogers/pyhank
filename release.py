@@ -10,6 +10,9 @@ SPECIFIER_PATTERN = re.compile(f'v?{VERSION_STRING}')
 
 class Version:
     def __init__(self, major: int, minor: int, patch: int):
+        if not (major >= 0 and minor >= 0 and patch >= 0):
+            raise ValueError('All arguments to Version must be positive integers')
+
         self.major = major
         self.minor = minor
         self.patch = patch
@@ -33,18 +36,32 @@ class Version:
     def increment_patch(self):
         self.patch += 1
 
+    def __eq__(self, other):
+        return self.major == other.major and self.minor == other.minor and self.patch == other.patch
+
+    @property
+    def tuple(self):
+        return self.major, self.minor, self.patch
+
+    @staticmethod
+    def from_string(string: str):
+        version_match = SPECIFIER_PATTERN.match(string)
+        if version_match is None:
+            raise ValueError('Version string is not in a valid format')
+        version_numbers = [int(v) for v in version_match.groups()[0:3]]
+        return Version(*version_numbers)
+
 
 def matches_start(string: str, pattern: str):
     regex = ''.join([c+'?' for c in pattern])
     return bool(re.fullmatch(regex, string))
 
 
-def main():
+def main():  # pragma: no cover
     with open('setup.py') as file:
         setup_info = file.read()
     version_match = SETUP_VERSION_PATTERN.search(setup_info)
-    version_numbers = [int(v) for v in version_match.groups()[1:4]]
-    current_version = Version(*version_numbers)
+    current_version = Version.from_string(version_match.group(1))
     assert str(current_version) == version_match.group(1), 'Error reading current version'
     print(f'Current version is {str(current_version)}')
     try:
@@ -52,11 +69,9 @@ def main():
     except ValueError:
         version = input('Enter a version specifier [vX.Y.Z|major|minor|PATCH]: ')
 
-    specifier_match = SPECIFIER_PATTERN.match(version)
-    if specifier_match is not None:
-        new_version_numbers = [int(v) for v in specifier_match.groups()[1:4]]
-        new_version = Version(*new_version_numbers)
-    else:
+    try:
+        new_version = Version.from_string(version)
+    except ValueError:
         new_version = copy(current_version)
         if matches_start(version, 'patch'):
             new_version.increment_patch()
@@ -68,13 +83,18 @@ def main():
             raise ValueError('Invalid version specifier')
 
     print(f'New version will be: {str(new_version)}')
+    continue_response = input('Continue? [Y/n]: ')
+    if continue_response.lower().startswith('n'):
+        return
     status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True)
     clean = status.stdout == b''
     do_stash = False
     if not clean:
         subprocess.run(['git', 'status'])
         stash_response = input('Working directory is not clean. '
-                               'Do you want to continue with current status, or stash [c/S]?: ')
+                               'Do you want to continue with current status, stash, or quit [c/S/q]?: ')
+        if stash_response.lower().startswith('q'):
+            return
         do_stash = not stash_response.lower().startswith('c')
         if do_stash:
             print('Stashing changes')
