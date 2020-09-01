@@ -16,6 +16,16 @@ def test_matches_start():
     assert not matches_start('mijor', 'major')
 
 
+@pytest.mark.parametrize('string', ['67.0.2', '0.0.0', '1.2.0'])
+def test_string_round_trip(string: str):
+    assert str(Version.from_string(string)) == string
+
+
+@pytest.mark.parametrize('string', ['67.0.2', '0.0.0', '1.2.0'])
+def test_tag(string: str):
+    assert Version.from_string(string).tag == 'v' + string
+
+
 @pytest.mark.parametrize('string, numbers', [('67.0.2', (67, 0, 2)),
                                              ('1.1.1', (1, 1, 1)),
                                              ('a.b.c', ()),
@@ -27,6 +37,7 @@ def test_from_string(string: str, numbers: Tuple):
     else:
         version = Version.from_string(string)
         assert version.tuple == numbers
+        assert Version(*numbers) == version
 
 
 @pytest.mark.parametrize('inputs, outputs', [((1, 3, 5), ((2, 0, 0), (1, 4, 0), (1, 3, 6))),
