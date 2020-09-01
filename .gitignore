@@ -10,3 +10,4 @@ build/
 dist/
 pyhank.egg-info/
 .DS_Store
+*.lprof
