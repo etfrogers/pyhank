@@ -119,6 +119,15 @@ def main():  # pragma: no cover
         subprocess.run(['git', 'push'], check=True)
         subprocess.run(['git', 'push', '--tags'], check=True)
 
+    release_response = input('Would you like to update the release branch? [Y/n]:')
+    if not release_response.lower().startswith('n'):
+        current_branch = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                                        check=True, capture_output=True)
+        current_branch = current_branch.stdout
+        subprocess.run(['git', 'checkout', 'release'], check=True)
+        subprocess.run(['git', 'push'], check=True)
+        subprocess.run(['git', 'checkout', current_branch], check=True)
+
     if do_stash:
         print('Unstashing changes')
         subprocess.run(['git', 'stash', 'pop'])
