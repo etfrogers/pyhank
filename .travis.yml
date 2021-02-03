@@ -44,3 +44,4 @@ jobs:
           tags: true
           branch: release
         skip_existing: true
+        distributions: "sdist bdist_wheel"
