@@ -6,12 +6,12 @@ In this example (as in the :ref:`sphx_glr_auto_examples_one_shot_example.py`)
 we will check the band limit of a jinc function: :math:`f(r) = \\frac{J_1(r)}{r}`.
 The (0 order) Hankel transform of this should be the top hat function.
 
-Here we use create a :class:`.HankelTransform` object and use its
+Here we create a :class:`.HankelTransform` object and use its
 :meth:`~.HankelTransform.qdht` method.
 In this simple case, the simpler, single shot functions used in
 :ref:`sphx_glr_auto_examples_one_shot_example.py` may be simpler
 to use. It should be noted, however, that they are not well suited for
-multiple transforms on the same grid, the approach taken here is
+multiple transforms on the same grid and the approach taken here is
 recommended.
 
 """
