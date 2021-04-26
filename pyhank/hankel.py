@@ -232,7 +232,7 @@ class HankelTransform:
         """
         return _spline(self.kr, function, self.original_k_grid)
 
-    def qdht(self, fr: np.ndarray) -> np.ndarray:
+    def qdht(self, fr: np.ndarray, axis: int = -2) -> np.ndarray:
         r"""QDHT: Quasi Discrete Hankel Transform
 
         Performs the Hankel transform of a function of radius, returning
@@ -247,16 +247,24 @@ class HankelTransform:
 
         :parameter fr: Function in real space as a function of radius (sampled at ``self.r``)
         :type fr: :class:`numpy.ndarray`
+        :parameter axis: Axis over which to compute the Hankel transform.
+        :type axis: :class:`int`
 
         :return: Function in frequency space (sampled at ``self.v``)
         :rtype: :class:`numpy.ndarray`
         """
-        jr, jv = self._get_scaling_factors(fr)
+        if (fr.ndim == 1) or (axis == -2):
+            jr, jv = self._get_scaling_factors(fr)
 
-        fv = jv * np.matmul(self.T, (fr / jr))
-        return fv
+            fv = jv * np.matmul(self.T, (fr / jr))
+            return fv
+        else:
+            _fr = np.core.swapaxes(fr, axis, -2)
+            jr, jv = self._get_scaling_factors(_fr)
+            fv = jv * np.matmul(self.T, (_fr / jr))
+            return np.core.swapaxes(fv, axis, -2)
 
-    def iqdht(self, fv: np.ndarray) -> np.ndarray:
+    def iqdht(self, fv: np.ndarray, axis: int = -2) -> np.ndarray:
         r"""IQDHT: Inverse Quasi Discrete Hankel Transform
 
         Performs the inverse Hankel transform of a function of frequency, returning
@@ -267,20 +275,31 @@ class HankelTransform:
 
         :parameter fv: Function in frequency space (sampled at self.v)
         :type fv: :class:`numpy.ndarray`
+        :parameter axis: Axis over which to compute the Hankel transform.
+        :type axis: :class:`int`
 
         :return: Radial function (sampled at self.r) = IHT(fv)
         :rtype: :class:`numpy.ndarray`
         """
-        jr, jv = self._get_scaling_factors(fv)
-        fr = jr * np.matmul(self.T, (fv / jv))
-        return fr
+        if (fv.ndim == 1) or (axis == -2):
+            jr, jv = self._get_scaling_factors(fv)
+            fr = jr * np.matmul(self.T, (fv / jv))
+            return fr
+        else:
+            _fv = np.core.swapaxes(fv, axis, -2)
+            jr, jv = self._get_scaling_factors(_fv)
+            fr = jr * np.matmul(self.T, (_fv / jv))
+            return np.core.swapaxes(fr, axis, -2)
 
     def _get_scaling_factors(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        try:
-            n2 = f.shape[1]
-            jr = self.JR[:, np.newaxis] * np.ones((1, n2))
-            jv = self.JV[:, np.newaxis] * np.ones((1, n2))
-        except IndexError:
+        if f.ndim > 1:
+            n2 = list(f.shape)
+            n2[-2] = 1
+            _shape = np.ones_like(n2)
+            _shape[-2] = len(self.JR)
+            jr = np.reshape(self.JR, _shape) * np.ones(n2)
+            jv = np.reshape(self.JV, _shape) * np.ones(n2)
+        else:
             jr = self.JR
             jv = self.JV
         return jr, jv

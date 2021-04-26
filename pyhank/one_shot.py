@@ -5,7 +5,7 @@ import numpy as np
 from pyhank import HankelTransform
 
 
-def qdht(r: np.ndarray, f: np.ndarray, order: int = 0) -> Tuple[np.ndarray, np.ndarray]:
+def qdht(r: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2) -> Tuple[np.ndarray, np.ndarray]:
     """Perform a quasi-discrete Hankel transform of the function ``f`` (sampled at points
     ``r``) and return the transformed function and its sample points in :math:`k`-space.
 
@@ -24,16 +24,18 @@ def qdht(r: np.ndarray, f: np.ndarray, order: int = 0) -> Tuple[np.ndarray, np.n
     :param f: The value of the function to be transformed.
     :type f: :class:`numpy.ndarray`
     :param order: The order of the Hankel Transform to perform. Defaults to 0.
+    :parameter axis: Axis over which to compute the Hankel transform.
+    :type axis: :class:`int`
     :return: A tuple containing the k coordinates of the transformed function and its values
     :rtype: (:class:`numpy.ndarray`, :class:`numpy.ndarray`)
     """
     transformer = HankelTransform(order=order, radial_grid=r)
     f_transform = transformer.to_transform_r(f)
-    ht = transformer.qdht(f_transform)
+    ht = transformer.qdht(f_transform, axis=axis)
     return transformer.kr, ht
 
 
-def iqdht(k: np.ndarray, f: np.ndarray, order: int = 0) -> Tuple[np.ndarray, np.ndarray]:
+def iqdht(k: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2) -> Tuple[np.ndarray, np.ndarray]:
     """Perform a inverse quasi-discrete Hankel transform of the function ``f`` (sampled at points
     ``k``) and return the transformed function and its sample points in radial space.
 
@@ -52,10 +54,12 @@ def iqdht(k: np.ndarray, f: np.ndarray, order: int = 0) -> Tuple[np.ndarray, np.
     :param f: The value of the function to be transformed.
     :type f: :class:`numpy.ndarray`
     :param order: The order of the Hankel Transform to perform. Defaults to 0.
+    :parameter axis: Axis over which to compute the Hankel transform.
+    :type axis: :class:`int`
     :return: A tuple containing the radial coordinates of the transformed function and its values
     :rtype: (:class:`numpy.ndarray`, :class:`numpy.ndarray`)
     """
     transformer = HankelTransform(order=order, k_grid=k)
     f_transform = transformer.to_transform_k(f)
-    ht = transformer.iqdht(f_transform)
+    ht = transformer.iqdht(f_transform, axis=axis)
     return transformer.r, ht
