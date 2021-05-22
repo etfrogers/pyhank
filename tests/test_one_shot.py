@@ -51,6 +51,45 @@ def test_inverse_gaussian(a: float):
     assert np.allclose(expected_f, actual_f)
 
 
+@pytest.mark.parametrize('axis', [0, 1])
+def test_gaussian_2d(axis: int, radius: np.ndarray):
+    # Note the definition in Guizar-Sicairos varies by 2*pi in
+    # both scaling of the argument (so use kr rather than v) and
+    # scaling of the magnitude.
+    a = np.linspace(2, 10)
+    dims_a = np.ones(2, np.int)
+    dims_a[1-axis] = len(a)
+    dims_r = np.ones(2, np.int)
+    dims_r[axis] = len(radius)
+    a_reshaped = np.reshape(a, dims_a)
+    r_reshaped = np.reshape(radius, dims_r)
+    f = np.exp(-a_reshaped ** 2 * r_reshaped ** 2)
+    kr, actual_ht = qdht(radius, f, axis=axis)
+    kr_reshaped = np.reshape(kr, dims_r)
+    expected_ht = 2*np.pi*(1 / (2 * a_reshaped**2)) * np.exp(-kr_reshaped**2 / (4 * a_reshaped**2))
+    assert np.allclose(expected_ht, actual_ht)
+
+
+@pytest.mark.parametrize('axis', [0, 1])
+def test_inverse_gaussian_2d(axis: int):
+    # Note the definition in Guizar-Sicairos varies by 2*pi in
+    # both scaling of the argument (so use kr rather than v) and
+    # scaling of the magnitude.
+    kr = np.linspace(0, 200, 1024)
+    a = np.linspace(2, 10)
+    dims_a = np.ones(2, np.int)
+    dims_a[1-axis] = len(a)
+    dims_r = np.ones(2, np.int)
+    dims_r[axis] = len(kr)
+    a_reshaped = np.reshape(a, dims_a)
+    kr_reshaped = np.reshape(kr, dims_r)
+    ht = 2*np.pi*(1 / (2 * a_reshaped**2)) * np.exp(-kr_reshaped**2 / (4 * a_reshaped**2))
+    r, actual_f = iqdht(kr, ht, axis=axis)
+    r_reshaped = np.reshape(r, dims_r)
+    expected_f = np.exp(-a_reshaped ** 2 * r_reshaped ** 2)
+    assert np.allclose(expected_f, actual_f)
+
+
 @pytest.mark.parametrize('a', [2, 1, 0.5])
 def test_1_over_r2_plus_z2(a: float):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
