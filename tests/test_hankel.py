@@ -238,6 +238,45 @@ def test_round_trip_k_interpolation(radius: np.ndarray, order: int, shape: Calla
     assert np.allclose(func, reconstructed_func, rtol=1e-4)
 
 
+@pytest.mark.parametrize('shape', smooth_shapes)
+@pytest.mark.parametrize('order', orders)
+@pytest.mark.parametrize('axis', [0, 1])
+def test_round_trip_r_interpolation_2d(radius: np.ndarray, order: int, shape: Callable, axis: int):
+    transformer = HankelTransform(order=order, radial_grid=radius)
+
+    # the function must be smoothish for interpolation
+    # to work. Random every point doesn't work
+    dims_amplitude = np.ones(2, np.int)
+    dims_amplitude[1-axis] = 10
+    amplitude = np.random.random(dims_amplitude)
+    dims_radius = np.ones(2, np.int)
+    dims_radius[axis] = len(radius)
+    func = np.reshape(shape(radius), dims_radius) * np.reshape(amplitude, dims_amplitude)
+    transform_func = transformer.to_transform_r(func, axis=axis)
+    reconstructed_func = transformer.to_original_r(transform_func, axis=axis)
+    assert np.allclose(func, reconstructed_func, rtol=1e-4)
+
+
+@pytest.mark.parametrize('shape', smooth_shapes)
+@pytest.mark.parametrize('order', orders)
+@pytest.mark.parametrize('axis', [0, 1])
+def test_round_trip_k_interpolation_2d(radius: np.ndarray, order: int, shape: Callable, axis: int):
+    k_grid = radius/10
+    transformer = HankelTransform(order=order, k_grid=k_grid)
+
+    # the function must be smoothish for interpolation
+    # to work. Random every point doesn't work
+    dims_amplitude = np.ones(2, np.int)
+    dims_amplitude[1-axis] = 10
+    amplitude = np.random.random(dims_amplitude)
+    dims_k = np.ones(2, np.int)
+    dims_k[axis] = len(radius)
+    func = np.reshape(shape(k_grid), dims_k) * np.reshape(amplitude, dims_amplitude)
+    transform_func = transformer.to_transform_k(func, axis=axis)
+    reconstructed_func = transformer.to_original_k(transform_func, axis=axis)
+    assert np.allclose(func, reconstructed_func, rtol=1e-4)
+
+
 # -------------------
 # Test known HT pairs
 # -------------------
