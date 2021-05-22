@@ -30,7 +30,7 @@ def qdht(r: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2) -> Tuple[
     :rtype: (:class:`numpy.ndarray`, :class:`numpy.ndarray`)
     """
     transformer = HankelTransform(order=order, radial_grid=r)
-    f_transform = transformer.to_transform_r(f)
+    f_transform = transformer.to_transform_r(f, axis=axis)
     ht = transformer.qdht(f_transform, axis=axis)
     return transformer.kr, ht
 
@@ -60,6 +60,6 @@ def iqdht(k: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2) -> Tuple
     :rtype: (:class:`numpy.ndarray`, :class:`numpy.ndarray`)
     """
     transformer = HankelTransform(order=order, k_grid=k)
-    f_transform = transformer.to_transform_k(f)
+    f_transform = transformer.to_transform_k(f, axis=axis)
     ht = transformer.iqdht(f_transform, axis=axis)
     return transformer.r, ht

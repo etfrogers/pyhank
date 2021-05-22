@@ -155,7 +155,7 @@ class HankelTransform:
                              'object that was not constructed with a k_grid')
         return self._original_k_grid
 
-    def to_transform_r(self, function: np.ndarray) -> np.ndarray:
+    def to_transform_r(self, function: np.ndarray, axis: int = 0) -> np.ndarray:
         """Interpolate a function, assumed to have been given at the original radial
         grid points used to construct the ``HankelTransform`` object onto the grid required
         of use in the QDHT algorithm.
@@ -168,14 +168,18 @@ class HankelTransform:
         :parameter function: The function to be interpolated. Specified at the radial points
             :attr:`~.HankelTransform.original_radial_grid`.
         :type function: :class:`numpy.ndarray`
+        :parameter axis: Axis representing the radial dependence of `function`.
+        :type axis: :class:`int`
 
         :return: Interpolated function suitable to passing to
             :meth:`HankelTransform.qdht` (sampled at ``self.r``)
         :rtype: :class:`numpy.ndarray`
         """
-        return _spline(self.original_radial_grid, function, self.r)
+        if function.ndim == 1:
+            axis = 0
+        return _spline(self.original_radial_grid, function, self.r, axis)
 
-    def to_original_r(self, function: np.ndarray) -> np.ndarray:
+    def to_original_r(self, function: np.ndarray, axis: int = 0) -> np.ndarray:
         """Interpolate a function, assumed to have been given at the Hankel transform points
         ``self.r`` (as returned by :meth:`HankelTransform.iqdht`) back onto the original grid
         used to construct the ``HankelTransform`` object.
@@ -187,13 +191,17 @@ class HankelTransform:
         :parameter function: The function to be interpolated. Specified at the radial points
             ``self.r``.
         :type function: :class:`numpy.ndarray`
+        :parameter axis: Axis representing the radial dependence of `function`.
+        :type axis: :class:`int`
 
         :return: Interpolated function at the points held in :attr:`~.HankelTransform.original_radial_grid`.
         :rtype: :class:`numpy.ndarray`
         """
-        return _spline(self.r, function, self.original_radial_grid)
+        if function.ndim == 1:
+            axis = 0
+        return _spline(self.r, function, self.original_radial_grid, axis)
 
-    def to_transform_k(self, function: np.ndarray) -> np.ndarray:
+    def to_transform_k(self, function: np.ndarray, axis: int = 0) -> np.ndarray:
         """Interpolate a function, assumed to have been given at the original k
         grid points used to construct the ``HankelTransform`` object onto the grid required
         of use in the IQDHT algorithm.
@@ -206,15 +214,18 @@ class HankelTransform:
         :parameter function: The function to be interpolated. Specified at the k points
             :attr:`~.HankelTransform.original_k_grid`.
         :type function: :class:`numpy.ndarray`
+        :parameter axis: Axis representing the frequency dependence of `function`.
+        :type axis: :class:`int`
 
         :return: Interpolated function suitable to passing to
             :meth:`HankelTransform.qdht` (sampled at ``self.kr``)
         :rtype: :class:`numpy.ndarray`
         """
+        if function.ndim == 1:
+            axis = 0
+        return _spline(self.original_k_grid, function, self.kr, axis)
 
-        return _spline(self.original_k_grid, function, self.kr)
-
-    def to_original_k(self, function: np.ndarray) -> np.ndarray:
+    def to_original_k(self, function: np.ndarray, axis: int = 0) -> np.ndarray:
         """Interpolate a function, assumed to have been given at the Hankel transform points
         ``self.k`` (as returned by :meth:`HankelTransform.qdht`) back onto the original grid
         used to construct the ``HankelTransform`` object.
@@ -226,11 +237,15 @@ class HankelTransform:
         :parameter function: The function to be interpolated. Specified at the radial points
             ``self.k``.
         :type function: :class:`numpy.ndarray`
+        :parameter axis: Axis representing the frequency dependence of `function`.
+        :type axis: :class:`int`
 
         :return: Interpolated function at the points held in :attr:`~.HankelTransform.original_k_grid`.
         :rtype: :class:`numpy.ndarray`
         """
-        return _spline(self.kr, function, self.original_k_grid)
+        if function.ndim == 1:
+            axis = 0
+        return _spline(self.kr, function, self.original_k_grid, axis)
 
     def qdht(self, fr: np.ndarray, axis: int = -2) -> np.ndarray:
         r"""QDHT: Quasi Discrete Hankel Transform
@@ -305,6 +320,6 @@ class HankelTransform:
         return jr, jv
 
 
-def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray) -> np.ndarray:
-    f = interpolate.interp1d(x0, y0, axis=0, fill_value='extrapolate', kind='cubic')
+def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray, axis: int) -> np.ndarray:
+    f = interpolate.interp1d(x0, y0, axis=axis, fill_value='extrapolate', kind='cubic')
     return f(x)
