@@ -290,6 +290,24 @@ def test_jinc(transformer: HankelTransform, a: float):
     assert error < 1e-3
 
 
+@pytest.mark.parametrize('two_d_size', [1, 100, 27])
+@pytest.mark.parametrize('axis', [0, 1])
+@pytest.mark.parametrize('a', [1, 0.7, 0.1])
+def test_jinc2d(transformer: HankelTransform, a: float, axis: int, two_d_size: int):
+    f = generalised_jinc(transformer.r, a, transformer.order)
+    second_axis = np.outer(np.linspace(0, 6, two_d_size), f)
+    expected_ht = generalised_top_hat(transformer.v, a, transformer.order)
+    if axis == 0:
+        f_array = np.outer(f, second_axis)
+        expected_ht_array = np.outer(expected_ht, second_axis)
+    else:
+        f_array = np.outer(second_axis, f)
+        expected_ht_array = np.outer(second_axis, expected_ht)
+    actual_ht = transformer.qdht(f_array, axis=axis)
+    error = np.mean(np.abs(expected_ht_array-actual_ht))
+    assert error < 1e-3
+
+
 @pytest.mark.parametrize('a', [1, 1.5, 0.1])
 def test_top_hat(transformer: HankelTransform, a: float):
     f = generalised_top_hat(transformer.r, a, transformer.order)

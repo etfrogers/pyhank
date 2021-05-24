@@ -17,6 +17,28 @@ def test_jinc(radius: np.ndarray, a: float, order: int):
     assert error < 1e-3
 
 
+@pytest.mark.parametrize('two_d_size', [1, 100, 27])
+@pytest.mark.parametrize('axis', [0, 1])
+@pytest.mark.parametrize('a', [1, 0.7, 0.1])
+@pytest.mark.parametrize('order', orders)
+def test_jinc2d(radius: np.ndarray, a: float, order: int, axis: int, two_d_size: int):
+    f = generalised_jinc(radius, a, order)
+    second_axis = np.outer(np.linspace(0, 6, two_d_size), f)
+    if axis == 0:
+        f_array = np.outer(f, second_axis)
+    else:
+        f_array = np.outer(second_axis, f)
+    kr, actual_ht = qdht(radius, f_array, axis=axis)
+    v = kr / (2 * np.pi)
+    expected_ht = generalised_top_hat(v, a, order)
+    if axis == 0:
+        expected_ht_array = np.outer(expected_ht, second_axis)
+    else:
+        expected_ht_array = np.outer(second_axis, expected_ht)
+    error = np.mean(np.abs(expected_ht_array-actual_ht))
+    assert error < 1e-3
+
+
 @pytest.mark.parametrize('order', orders)
 @pytest.mark.parametrize('a', [1, 1.5, 0.1])
 def test_top_hat(radius: np.ndarray, a: float, order: int):
