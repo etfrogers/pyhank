@@ -84,10 +84,24 @@ def test_round_trip(radius: np.ndarray, transformer: HankelTransform):
 
 
 @pytest.mark.parametrize('two_d_size', [1, 100, 27])
-def test_round_trip_2d(two_d_size: int, radius: np.ndarray, transformer: HankelTransform):
-    func = np.random.random((radius.size, two_d_size))
-    ht = transformer.qdht(func)
-    reconstructed = transformer.iqdht(ht)
+@pytest.mark.parametrize('axis', [0, 1])
+def test_round_trip_2d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
+    dims = np.ones(2, np.int) * two_d_size
+    dims[axis] = radius.size
+    func = np.random.random(dims)
+    ht = transformer.qdht(func, axis=axis)
+    reconstructed = transformer.iqdht(ht, axis=axis)
+    assert np.allclose(func, reconstructed)
+
+
+@pytest.mark.parametrize('two_d_size', [1, 100, 27])
+@pytest.mark.parametrize('axis', [0, 1, 2])
+def test_round_trip_3d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
+    dims = np.ones(3, np.int) * two_d_size
+    dims[axis] = radius.size
+    func = np.random.random(dims)
+    ht = transformer.qdht(func, axis=axis)
+    reconstructed = transformer.iqdht(ht, axis=axis)
     assert np.allclose(func, reconstructed)
 
 
@@ -224,6 +238,45 @@ def test_round_trip_k_interpolation(radius: np.ndarray, order: int, shape: Calla
     assert np.allclose(func, reconstructed_func, rtol=1e-4)
 
 
+@pytest.mark.parametrize('shape', smooth_shapes)
+@pytest.mark.parametrize('order', orders)
+@pytest.mark.parametrize('axis', [0, 1])
+def test_round_trip_r_interpolation_2d(radius: np.ndarray, order: int, shape: Callable, axis: int):
+    transformer = HankelTransform(order=order, radial_grid=radius)
+
+    # the function must be smoothish for interpolation
+    # to work. Random every point doesn't work
+    dims_amplitude = np.ones(2, np.int)
+    dims_amplitude[1-axis] = 10
+    amplitude = np.random.random(dims_amplitude)
+    dims_radius = np.ones(2, np.int)
+    dims_radius[axis] = len(radius)
+    func = np.reshape(shape(radius), dims_radius) * np.reshape(amplitude, dims_amplitude)
+    transform_func = transformer.to_transform_r(func, axis=axis)
+    reconstructed_func = transformer.to_original_r(transform_func, axis=axis)
+    assert np.allclose(func, reconstructed_func, rtol=1e-4)
+
+
+@pytest.mark.parametrize('shape', smooth_shapes)
+@pytest.mark.parametrize('order', orders)
+@pytest.mark.parametrize('axis', [0, 1])
+def test_round_trip_k_interpolation_2d(radius: np.ndarray, order: int, shape: Callable, axis: int):
+    k_grid = radius/10
+    transformer = HankelTransform(order=order, k_grid=k_grid)
+
+    # the function must be smoothish for interpolation
+    # to work. Random every point doesn't work
+    dims_amplitude = np.ones(2, np.int)
+    dims_amplitude[1-axis] = 10
+    amplitude = np.random.random(dims_amplitude)
+    dims_k = np.ones(2, np.int)
+    dims_k[axis] = len(radius)
+    func = np.reshape(shape(k_grid), dims_k) * np.reshape(amplitude, dims_amplitude)
+    transform_func = transformer.to_transform_k(func, axis=axis)
+    reconstructed_func = transformer.to_original_k(transform_func, axis=axis)
+    assert np.allclose(func, reconstructed_func, rtol=1e-4)
+
+
 # -------------------
 # Test known HT pairs
 # -------------------
@@ -267,6 +320,46 @@ def test_inverse_gaussian(a: float, radius: np.ndarray):
     ht = 2*np.pi*(1 / (2 * a**2)) * np.exp(-transformer.kr**2 / (4 * a**2))
     actual_f = transformer.iqdht(ht)
     expected_f = np.exp(-a ** 2 * transformer.r ** 2)
+    assert np.allclose(expected_f, actual_f)
+
+
+@pytest.mark.parametrize('axis', [0, 1])
+def test_gaussian_2d(axis: int, radius: np.ndarray):
+    # Note the definition in Guizar-Sicairos varies by 2*pi in
+    # both scaling of the argument (so use kr rather than v) and
+    # scaling of the magnitude.
+    transformer = HankelTransform(order=0, radial_grid=radius)
+    a = np.linspace(2, 10)
+    dims_a = np.ones(2, np.int)
+    dims_a[1-axis] = len(a)
+    dims_r = np.ones(2, np.int)
+    dims_r[axis] = len(transformer.r)
+    a_reshaped = np.reshape(a, dims_a)
+    r_reshaped = np.reshape(transformer.r, dims_r)
+    kr_reshaped = np.reshape(transformer.kr, dims_r)
+    f = np.exp(-a_reshaped**2 * r_reshaped**2)
+    expected_ht = 2*np.pi*(1 / (2 * a_reshaped**2)) * np.exp(-kr_reshaped**2 / (4 * a_reshaped**2))
+    actual_ht = transformer.qdht(f, axis=axis)
+    assert np.allclose(expected_ht, actual_ht)
+
+
+@pytest.mark.parametrize('axis', [0, 1])
+def test_inverse_gaussian_2d(axis: int, radius: np.ndarray):
+    # Note the definition in Guizar-Sicairos varies by 2*pi in
+    # both scaling of the argument (so use kr rather than v) and
+    # scaling of the magnitude.
+    transformer = HankelTransform(order=0, radial_grid=radius)
+    a = np.linspace(2, 10)
+    dims_a = np.ones(2, np.int)
+    dims_a[1-axis] = len(a)
+    dims_r = np.ones(2, np.int)
+    dims_r[axis] = len(transformer.r)
+    a_reshaped = np.reshape(a, dims_a)
+    r_reshaped = np.reshape(transformer.r, dims_r)
+    kr_reshaped = np.reshape(transformer.kr, dims_r)
+    ht = 2*np.pi*(1 / (2 * a_reshaped**2)) * np.exp(-kr_reshaped**2 / (4 * a_reshaped**2))
+    actual_f = transformer.iqdht(ht, axis=axis)
+    expected_f = np.exp(-a_reshaped ** 2 * r_reshaped ** 2)
     assert np.allclose(expected_f, actual_f)
 
 
