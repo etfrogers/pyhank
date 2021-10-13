@@ -3,6 +3,8 @@ import subprocess
 import sys
 from copy import copy
 
+import os.path
+
 VERSION_STRING = r'(\d+).(\d+).(\d+)'
 SETUP_VERSION_PATTERN = re.compile(f'version="({VERSION_STRING})"')
 SPECIFIER_PATTERN = re.compile(f'v?{VERSION_STRING}')
@@ -57,12 +59,23 @@ def matches_start(string: str, pattern: str):
     return bool(re.fullmatch(regex, string))
 
 
+def get_current_version():
+    from setuptools_scm import get_version
+
+    def vsch(x):
+        return x.tag.base_version
+
+    def ls(x):
+        return ""
+
+    cd = os.path.dirname(__file__)
+
+    vs = get_version(cd, version_scheme=vsch, local_scheme=ls)
+    return Version.from_string(vs)
+
+
 def main():  # pragma: no cover
-    with open('setup.py') as file:
-        setup_info = file.read()
-    version_match = SETUP_VERSION_PATTERN.search(setup_info)
-    current_version = Version.from_string(version_match.group(1))
-    assert str(current_version) == version_match.group(1), 'Error reading current version'
+    current_version = get_current_version()
     print(f'Current version is {str(current_version)}')
     try:
         _, version = sys.argv
@@ -99,13 +112,6 @@ def main():  # pragma: no cover
         if do_stash:
             print('Stashing changes')
             subprocess.run(['git', 'stash'], check=True)
-    # edit file
-    setup_info = SETUP_VERSION_PATTERN.sub(f'version="{str(new_version)}"', setup_info)
-    with open('setup.py', 'w') as file:
-        file.write(setup_info)
-    # commit
-    subprocess.run(['git', 'add', 'setup.py'], check=True)
-    subprocess.run(['git', 'commit', f'-m Set version to {str(new_version)}'], check=True)
     # tag
     message = input('Enter release message. Leave blank to use the default message):\n')
     if message == '':
