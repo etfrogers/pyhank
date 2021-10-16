@@ -17,7 +17,7 @@ def test_jinc(radius: np.ndarray, a: float, order: int):
     assert error < 1e-3
 
 
-@pytest.mark.parametrize('two_d_size', [1, 100, 27])
+@pytest.mark.parametrize('two_d_size', [1, 35, 27])
 @pytest.mark.parametrize('axis', [0, 1])
 @pytest.mark.parametrize('a', [1, 0.7, 0.1])
 @pytest.mark.parametrize('order', orders)
