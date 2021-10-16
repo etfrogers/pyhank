@@ -36,7 +36,9 @@ def test_jinc2d(radius: np.ndarray, a: float, order: int, axis: int, two_d_size:
     else:
         expected_ht_array = np.outer(second_axis, expected_ht)
     error = np.mean(np.abs(expected_ht_array-actual_ht))
-    assert error < 1e-3
+    # multiply tolerance to allow for the larger values caused
+    # by second_axis having values greater than 1
+    assert error < 1e-3 * 4
 
 
 @pytest.mark.parametrize('order', orders)
