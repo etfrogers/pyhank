@@ -11,7 +11,7 @@ install:
   - pip install -r dev_requirements.txt
 # command to run tests
 script:
-  - python3 setup.py bdist_wheel
+  - python3 setup.py sdist bdist_wheel
   - pip3 install --upgrade ./dist/*.whl
   - pytest --cov=./ --flake8
 after_success:
