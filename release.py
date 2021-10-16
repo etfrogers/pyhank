@@ -2,6 +2,7 @@ import re
 import subprocess
 import sys
 from copy import copy
+from setuptools_scm import get_version
 
 import os.path
 
@@ -60,7 +61,6 @@ def matches_start(string: str, pattern: str):
 
 
 def get_current_version():
-    from setuptools_scm import get_version
 
     def vsch(x):
         return x.tag.base_version
