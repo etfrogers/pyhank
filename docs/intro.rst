@@ -11,7 +11,7 @@ I have used this code extensively for beam-propagation-method calculations of ra
 
 PyHank was inspired by Adam Wyatt's `Matlab version <https://uk.mathworks.com/matlabcentral/fileexchange/15623-hankel-transform>`_ which I used for many years, before moving to Python and needing my own implementation. It aims to simplify the interface (using Python's object-oriented approach) and utilise existing NumPy/SciPy functions wherever possible.
 
-It has both a simple `single-shot interface <one_shot>`_, and also supplies a `transformer object <hankel>`_ which speeds up computation significantly if making multiple transforms on the same grid.
+It has both a simple `single-shot interface <one_shot.html>`_, and also supplies a `transformer object <hankel.html>`_ which speeds up computation significantly if making multiple transforms on the same grid.
 
 Contributions and comments are welcome using Github at:
 http://github.com/etfrogers/pyhank
