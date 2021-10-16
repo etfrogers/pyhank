@@ -129,7 +129,7 @@ def main():  # pragma: no cover
     if not release_response.lower().startswith('n'):
         current_branch = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
                                         check=True, capture_output=True)
-        current_branch = current_branch.stdout
+        current_branch = current_branch.stdout.strip()
         subprocess.run(['git', 'checkout', 'release'], check=True)
         subprocess.run(['git', 'push'], check=True)
         subprocess.run(['git', 'checkout', current_branch], check=True)
