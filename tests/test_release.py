@@ -2,7 +2,7 @@ from typing import Tuple
 
 import pytest
 
-from release import matches_start, Version
+from release import matches_start, Version, get_current_version
 
 
 def test_matches_start():
@@ -19,6 +19,11 @@ def test_matches_start():
 @pytest.mark.parametrize('string', ['67.0.2', '0.0.0', '1.2.0'])
 def test_string_round_trip(string: str):
     assert str(Version.from_string(string)) == string
+
+
+def test_get_current_version():
+    # just check it runs: we can't assert anything as the version will always change!
+    _ = get_current_version()
 
 
 @pytest.mark.parametrize('string', ['67.0.2', '0.0.0', '1.2.0'])
