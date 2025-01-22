@@ -274,10 +274,10 @@ class HankelTransform:
             fv = jv * np.matmul(self.T, (fr / jr))
             return fv
         else:
-            _fr = np.core.swapaxes(fr, axis, -2)
+            _fr = np.swapaxes(fr, axis, -2)
             jr, jv = self._get_scaling_factors(_fr)
             fv = jv * np.matmul(self.T, (_fr / jr))
-            return np.core.swapaxes(fv, axis, -2)
+            return np.swapaxes(fv, axis, -2)
 
     def iqdht(self, fv: np.ndarray, axis: int = -2) -> np.ndarray:
         r"""IQDHT: Inverse Quasi Discrete Hankel Transform
@@ -301,10 +301,10 @@ class HankelTransform:
             fr = jr * np.matmul(self.T, (fv / jv))
             return fr
         else:
-            _fv = np.core.swapaxes(fv, axis, -2)
+            _fv = np.swapaxes(fv, axis, -2)
             jr, jv = self._get_scaling_factors(_fv)
             fr = jr * np.matmul(self.T, (_fv / jv))
-            return np.core.swapaxes(fr, axis, -2)
+            return np.swapaxes(fr, axis, -2)
 
     def _get_scaling_factors(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         if f.ndim > 1:

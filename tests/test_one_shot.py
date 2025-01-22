@@ -81,9 +81,9 @@ def test_gaussian_2d(axis: int, radius: np.ndarray):
     # both scaling of the argument (so use kr rather than v) and
     # scaling of the magnitude.
     a = np.linspace(2, 10)
-    dims_a = np.ones(2, np.int)
+    dims_a = np.ones(2, int)
     dims_a[1-axis] = len(a)
-    dims_r = np.ones(2, np.int)
+    dims_r = np.ones(2, int)
     dims_r[axis] = len(radius)
     a_reshaped = np.reshape(a, dims_a)
     r_reshaped = np.reshape(radius, dims_r)
@@ -101,9 +101,9 @@ def test_inverse_gaussian_2d(axis: int):
     # scaling of the magnitude.
     kr = np.linspace(0, 200, 1024)
     a = np.linspace(2, 10)
-    dims_a = np.ones(2, np.int)
+    dims_a = np.ones(2, int)
     dims_a[1-axis] = len(a)
-    dims_r = np.ones(2, np.int)
+    dims_r = np.ones(2, int)
     dims_r[axis] = len(kr)
     a_reshaped = np.reshape(a, dims_a)
     kr_reshaped = np.reshape(kr, dims_r)

@@ -66,12 +66,12 @@ def test_energy_conservation(shape: Callable,
     transformer = HankelTransform(transformer.order, 10, transformer.n_points)
     func = shape(transformer.r, 0.5, transformer.order)
     intensity_before = np.abs(func)**2
-    energy_before = np.trapz(y=intensity_before * 2 * np.pi * transformer.r,
+    energy_before = np.trapezoid(y=intensity_before * 2 * np.pi * transformer.r,
                              x=transformer.r)
 
     ht = transformer.qdht(func)
     intensity_after = np.abs(ht)**2
-    energy_after = np.trapz(y=intensity_after * 2 * np.pi * transformer.v,
+    energy_after = np.trapezoid(y=intensity_after * 2 * np.pi * transformer.v,
                             x=transformer.v)
     assert np.isclose(energy_before, energy_after, rtol=0.01)
 
@@ -86,7 +86,7 @@ def test_round_trip(radius: np.ndarray, transformer: HankelTransform):
 @pytest.mark.parametrize('two_d_size', [1, 100, 27])
 @pytest.mark.parametrize('axis', [0, 1])
 def test_round_trip_2d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
-    dims = np.ones(2, np.int) * two_d_size
+    dims = np.ones(2, int) * two_d_size
     dims[axis] = radius.size
     func = np.random.random(dims)
     ht = transformer.qdht(func, axis=axis)
@@ -97,7 +97,7 @@ def test_round_trip_2d(two_d_size: int, axis: int, radius: np.ndarray, transform
 @pytest.mark.parametrize('two_d_size', [1, 100, 27])
 @pytest.mark.parametrize('axis', [0, 1, 2])
 def test_round_trip_3d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
-    dims = np.ones(3, np.int) * two_d_size
+    dims = np.ones(3, int) * two_d_size
     dims[axis] = radius.size
     func = np.random.random(dims)
     ht = transformer.qdht(func, axis=axis)
@@ -246,10 +246,10 @@ def test_round_trip_r_interpolation_2d(radius: np.ndarray, order: int, shape: Ca
 
     # the function must be smoothish for interpolation
     # to work. Random every point doesn't work
-    dims_amplitude = np.ones(2, np.int)
+    dims_amplitude = np.ones(2, int)
     dims_amplitude[1-axis] = 10
     amplitude = np.random.random(dims_amplitude)
-    dims_radius = np.ones(2, np.int)
+    dims_radius = np.ones(2, int)
     dims_radius[axis] = len(radius)
     func = np.reshape(shape(radius), dims_radius) * np.reshape(amplitude, dims_amplitude)
     transform_func = transformer.to_transform_r(func, axis=axis)
@@ -266,10 +266,10 @@ def test_round_trip_k_interpolation_2d(radius: np.ndarray, order: int, shape: Ca
 
     # the function must be smoothish for interpolation
     # to work. Random every point doesn't work
-    dims_amplitude = np.ones(2, np.int)
+    dims_amplitude = np.ones(2, int)
     dims_amplitude[1-axis] = 10
     amplitude = np.random.random(dims_amplitude)
-    dims_k = np.ones(2, np.int)
+    dims_k = np.ones(2, int)
     dims_k[axis] = len(radius)
     func = np.reshape(shape(k_grid), dims_k) * np.reshape(amplitude, dims_amplitude)
     transform_func = transformer.to_transform_k(func, axis=axis)
@@ -348,9 +348,9 @@ def test_gaussian_2d(axis: int, radius: np.ndarray):
     # scaling of the magnitude.
     transformer = HankelTransform(order=0, radial_grid=radius)
     a = np.linspace(2, 10)
-    dims_a = np.ones(2, np.int)
+    dims_a = np.ones(2, int)
     dims_a[1-axis] = len(a)
-    dims_r = np.ones(2, np.int)
+    dims_r = np.ones(2, int)
     dims_r[axis] = len(transformer.r)
     a_reshaped = np.reshape(a, dims_a)
     r_reshaped = np.reshape(transformer.r, dims_r)
@@ -368,9 +368,9 @@ def test_inverse_gaussian_2d(axis: int, radius: np.ndarray):
     # scaling of the magnitude.
     transformer = HankelTransform(order=0, radial_grid=radius)
     a = np.linspace(2, 10)
-    dims_a = np.ones(2, np.int)
+    dims_a = np.ones(2, int)
     dims_a[1-axis] = len(a)
-    dims_r = np.ones(2, np.int)
+    dims_r = np.ones(2, int)
     dims_r[axis] = len(transformer.r)
     a_reshaped = np.reshape(a, dims_a)
     r_reshaped = np.reshape(transformer.r, dims_r)
