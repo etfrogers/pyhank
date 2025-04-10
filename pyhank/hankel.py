@@ -14,8 +14,8 @@ class HankelTransform:
         :attr:`.HankelTransform.v` (frequency space) or equivalently :attr:`.HankelTransform.kr`
         (angular frequency or wavenumber space).
 
-        The constructor has one required argument (``order``). The remaining four arguments offer
-        three different ways of specifying the radial (and therefore implicitly the frequency) points:
+        The constructor has one required argument (``order``). The remaining five arguments offer
+        three different ways of specifying the radial (and therefore implicitly the frequency) points and type of Bessel functions:
 
         1. Supply both a maximum radius ``r_max`` and number of transform points ``n_points``
         2. Supply the original (often equally spaced) ``radial_grid`` on which you have currently
@@ -32,6 +32,9 @@ class HankelTransform:
            As in option 2, :attr:`.HankelTransform.n_points` is determined by ``k_grid.size``.
            :attr:`HankelTransform.r_max` is determined in a more complex way from ``np.max(k_grid)``.
 
+        By setting the argument ``bessel_type`` to either ``"polar"`` od ``"spherical"`` it is possible
+        to choose between :math:`J_n` and :math:`j_n` Bessel functions (default is ``"polar"``).
+
         :parameter order: Transform order :math:`p`
         :type order: :class:`int`
         :parameter max_radius: (Optional) Radial extent of transform :math:`r_\textrm{max}`
@@ -44,6 +47,8 @@ class HankelTransform:
         :type radial_grid: :class:`numpy.ndarray`
         :parameter k_grid: (Optional) Number of sample points :math:`N`
         :type k_grid: :class:`numpy.ndarray`
+        :parameter bessel_type: (Optional) Type of Bessel functions used to compute the transform
+        :type bessel_type: :class:`str`
 
         :ivar alpha: The first :math:`N` Roots of the :math:`p` th order Bessel function.
         :ivar alpha_n1: (N+1)th root :math:`\alpha_{N1}`
