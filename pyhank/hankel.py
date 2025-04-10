@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 import scipy.special as scipy_bessel
 from scipy import interpolate
+from scipy.optimize import brentq
 
 
 class HankelTransform:
@@ -67,7 +68,7 @@ class HankelTransform:
         """
 
     def __init__(self, order: int, max_radius: float = None, n_points: int = None,
-                 radial_grid: np.ndarray = None, k_grid: np.ndarray = None):
+                 radial_grid: np.ndarray = None, k_grid: np.ndarray = None, bessel_type: str = "polar"):
         """Constructor"""
 
         usage = 'Either radial_grid or k_grid or both max_radius and n_points must be supplied'
@@ -92,9 +93,18 @@ class HankelTransform:
         self._n_points = n_points
         self._original_radial_grid = radial_grid
         self._original_k_grid = k_grid
+        self.bessel_type = bessel_type
 
         # Calculate N+1 roots must be calculated before max_radius can be derived from k_grid
-        alpha = scipy_bessel.jn_zeros(self.order, self.n_points + 1)
+        usage = 'Available types of Bessel functions are `polar` and `spherical`'
+        alpha = None
+        if bessel_type == "polar":
+            alpha = scipy_bessel.jn_zeros(self.order, self.n_points + 1)
+        elif bessel_type == "spherical":
+            alpha = _Jn_zeros(self.order, self.n_points + 1)
+        else:
+            raise ValueError(usage)
+
         self.alpha = alpha[0:-1]
         self.alpha_n1 = alpha[-1]
 
@@ -111,9 +121,20 @@ class HankelTransform:
         self.S = self.alpha_n1
 
         # Calculate hankel matrix and vectors
-        jp = scipy_bessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
-        jp1 = np.abs(scipy_bessel.jv(order + 1, self.alpha))
-        self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S)
+        jp = None
+        jp1 = None
+        self.T = None
+        if bessel_type == "polar":
+            jp = scipy_bessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
+            jp1 = np.abs(scipy_bessel.jv(order + 1, self.alpha))
+            self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S)
+        elif bessel_type == "spherical":
+            jp = scipy_bessel.spherical_jn(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
+            jp1 = np.abs(scipy_bessel.spherical_jn(order + 1, self.alpha))
+            self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S) / np.sqrt(2*len(self.r))
+        else:
+            raise ValueError(usage)
+
         self.JR = jp1 / self.max_radius
         self.JV = jp1 / self.v_max
 
@@ -323,3 +344,21 @@ class HankelTransform:
 def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray, axis: int) -> np.ndarray:
     f = interpolate.interp1d(x0, y0, axis=axis, fill_value='extrapolate', kind='cubic')
     return f(x)
+
+# adapted from SciPy Cookbook https://scipy-cookbook.readthedocs.io/items/SphericalBesselZeros.html
+def _Jn_zeros(n,nt):
+    zerosj = np.zeros((n+1, nt), dtype=float)
+    zerosj[0] = np.arange(1,nt+1)*np.pi
+    if n == 0:
+        return (zerosj[0])
+    points = np.arange(1,nt+n+1)*np.pi
+    racines = np.zeros(nt+n, dtype=float)
+    def Jn(r, n):
+         return scipy_bessel.spherical_jn(n, r)
+    for i in range(1,n+1):
+        for j in range(nt+n-i):
+          foo = brentq(Jn, points[j], points[j+1], (i,))
+          racines[j] = foo
+        points = racines
+        zerosj[i][:nt] = racines[:nt]
+    return (zerosj[-1])
