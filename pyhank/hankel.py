@@ -17,15 +17,15 @@ class HankelTransform:
         three different ways of specifying the radial (and therefore implicitly the frequency) points:
 
         1. Supply both a maximum radius ``r_max`` and number of transform points ``n_points``
-        2. Supply the original (often equally spaced) ``radial_grid`` on which you have currently
+        2. Supply the original (often equally spaced) ``radial_grid`` on which you currently
            have sample points. This approach allows easy conversion from the original grid using
            :meth:`.HankelTransform.to_transform_r()`. ``t = HankelTransform(order, radial_grid=r)``
            is effectively equivalent to ``t = HankelTransform(order, n_points=r.size, r_max=np.max(r))``
-           except for the fact the the original radial grid is stored in the :class:`.HankelTransform`
+           except for the fact the original radial grid is stored in the :class:`.HankelTransform`
            object for use in :meth:`~.HankelTransform.to_transform_r` and
            :meth:`~.HankelTransform.to_original_r`.
         3. Supply the original (often equally spaced) :math:`k`-space grid on which you
-           have currently have sample points. This is most use if you intend to do inverse
+           currently have sample points. This is most use if you intend to do inverse
            transforms. It allows easy conversion to and from the original grid using
            :meth:`~.HankelTransform.to_original_k()` and :meth:`~.HankelTransform.to_transform_k()`.
            As in option 2, :attr:`.HankelTransform.n_points` is determined by ``k_grid.size``.
@@ -160,7 +160,7 @@ class HankelTransform:
         grid points used to construct the ``HankelTransform`` object onto the grid required
         of use in the QDHT algorithm.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
+        If the ``HankelTransform`` object was constructed with a (say) equally-spaced
         grid in radius, then it needs the function to transform to be sampled at a specific
         grid before it can be passed to :meth:`.HankelTransform.qdht`. This method provides
         a convenient way of doing this.
@@ -184,7 +184,7 @@ class HankelTransform:
         ``self.r`` (as returned by :meth:`HankelTransform.iqdht`) back onto the original grid
         used to construct the ``HankelTransform`` object.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
+        If the ``HankelTransform`` object was constructed with a (say) equally-spaced
         grid in radius, it may be useful to convert back to this grid after a IQDHT.
         This method provides a convenient way of doing this.
 
@@ -206,7 +206,7 @@ class HankelTransform:
         grid points used to construct the ``HankelTransform`` object onto the grid required
         of use in the IQDHT algorithm.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
+        If the ``HankelTransform`` object was constructed with a (say) equally-spaced
         grid in :math:`k`, then it needs the function to transform to be sampled at a specific
         grid before it can be passed to :meth:`.HankelTransform.iqdht`. This method provides
         a convenient way of doing this.
@@ -230,7 +230,7 @@ class HankelTransform:
         ``self.k`` (as returned by :meth:`HankelTransform.qdht`) back onto the original grid
         used to construct the ``HankelTransform`` object.
 
-        If the the ``HankelTransform`` object was constructed with a (say) equally-spaced
+        If the ``HankelTransform`` object was constructed with a (say) equally-spaced
         grid in :math:`k`, it may be useful to convert back to this grid after a QDHT.
         This method provides a convenient way of doing this.
 
