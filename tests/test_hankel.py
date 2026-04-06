@@ -67,12 +67,12 @@ def test_energy_conservation(shape: Callable,
     func = shape(transformer.r, 0.5, transformer.order)
     intensity_before = np.abs(func)**2
     energy_before = np.trapezoid(y=intensity_before * 2 * np.pi * transformer.r,
-                             x=transformer.r)
+                                 x=transformer.r)
 
     ht = transformer.qdht(func)
     intensity_after = np.abs(ht)**2
     energy_after = np.trapezoid(y=intensity_after * 2 * np.pi * transformer.v,
-                            x=transformer.v)
+                                x=transformer.v)
     assert np.isclose(energy_before, energy_after, rtol=0.01)
 
 
@@ -197,8 +197,8 @@ def test_initialisation_errors():
 @pytest.mark.parametrize('n', [10, 100, 512, 1024])
 @pytest.mark.parametrize('max_radius', [0.1, 10, 20, 1e6])
 def test_r_creation_equivalence(n: int, max_radius: float):
-    transformer1 = HankelTransform(order=0, n_points=1024, max_radius=50)
-    r = np.linspace(0, 50, 1024)
+    transformer1 = HankelTransform(order=0, n_points=n, max_radius=max_radius)
+    r = np.linspace(0, max_radius, n)
     transformer2 = HankelTransform(order=0, radial_grid=r)
 
     for key, val in transformer1.__dict__.items():
