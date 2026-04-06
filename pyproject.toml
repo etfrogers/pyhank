@@ -5,5 +5,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 
 [project]
+name = "pyhank"
+dynamic = ["version"]
 dependencies = ["numpy~=2.2.2", "scipy~=1.15.1"]
 requires-python = ">=3.11"
