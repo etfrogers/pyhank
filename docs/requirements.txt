@@ -1,4 +1,0 @@
-sphinx-gallery~=0.7
-sphinx_rtd_theme~=0.5
-pillow>=8.1.2
-matplotlib~=3.2
