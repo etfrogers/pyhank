@@ -41,8 +41,8 @@ dev = [
     "setuptools_scm",
 ]
 docs = [
-    "sphinx-gallery~=0.7",
-    "sphinx_rtd_theme~=0.5",
-    "pillow>=8.1.2",
-    "matplotlib~=3.2",
+    "sphinx-gallery~=0.20",
+    "sphinx_rtd_theme~=3.1",
+    "pillow~=12.2",
+    "matplotlib~=3.10",
 ]
