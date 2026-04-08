@@ -18,7 +18,7 @@ authors = [{ name = "Edward Rogers", email = "etfrogers@hotmail.com" }]
 description = "pyhank - Quasi-discrete Hankel transforms for python"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
