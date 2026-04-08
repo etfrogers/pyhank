@@ -23,7 +23,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = ["numpy~=2.2.2", "scipy~=1.15.1"]
+dependencies = [
+    "numpy~=2.2.2",
+    "scipy~=1.15.0; python_version == '3.10'",
+    "scipy~=1.17.0; python_version > '3.10'",
+]
 
 [project.urls]
 Homepage = "https://github.com/etfrogers/pyhank"
