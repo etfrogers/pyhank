@@ -1,5 +1,5 @@
-numpy==1.22.0
-scipy==1.7.3
+numpy~=2.0.0
+scipy~=1.13.0
 pytest
 pytest-cov
 pytest-flake8
