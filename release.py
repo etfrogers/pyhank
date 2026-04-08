@@ -4,7 +4,7 @@ import sys
 from copy import copy
 from importlib.metadata import version
 
-VERSION_STRING = r'(\d+).(\d+).(\d+)'
+VERSION_STRING = r'(\d+).(\d+).?(\d+)?'
 SETUP_VERSION_PATTERN = re.compile(f'version="({VERSION_STRING})"')
 SPECIFIER_PATTERN = re.compile(f'v?{VERSION_STRING}')
 
@@ -49,7 +49,7 @@ class Version:
         version_match = SPECIFIER_PATTERN.match(string)
         if version_match is None:
             raise ValueError('Version string is not in a valid format')
-        version_numbers = [int(v) for v in version_match.groups()[0:3]]
+        version_numbers = [int(v) if v is not None else 0 for v in version_match.groups()[0:3]]
         return Version(*version_numbers)
 
 
