@@ -2,11 +2,9 @@ import re
 import subprocess
 import sys
 from copy import copy
-from setuptools_scm import get_version
+from importlib.metadata import version
 
-import os.path
-
-VERSION_STRING = r'(\d+).(\d+).(\d+)'
+VERSION_STRING = r'(\d+).(\d+).?(\d+)?'
 SETUP_VERSION_PATTERN = re.compile(f'version="({VERSION_STRING})"')
 SPECIFIER_PATTERN = re.compile(f'v?{VERSION_STRING}')
 
@@ -51,7 +49,7 @@ class Version:
         version_match = SPECIFIER_PATTERN.match(string)
         if version_match is None:
             raise ValueError('Version string is not in a valid format')
-        version_numbers = [int(v) for v in version_match.groups()[0:3]]
+        version_numbers = [int(v) if v is not None else 0 for v in version_match.groups()[0:3]]
         return Version(*version_numbers)
 
 
@@ -61,17 +59,8 @@ def matches_start(string: str, pattern: str):
 
 
 def get_current_version():
-
-    def vsch(x):
-        return x.tag.base_version
-
-    def ls(x):
-        return ""
-
-    cd = os.path.dirname(__file__)
-
-    vs = get_version(cd, version_scheme=vsch, local_scheme=ls)
-    return Version.from_string(vs)
+    version_string = version("pyhank")
+    return Version.from_string(version_string)
 
 
 def main():  # pragma: no cover
