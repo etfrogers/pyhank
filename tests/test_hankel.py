@@ -207,6 +207,8 @@ def test_r_creation_equivalence(n: int, max_radius: float):
         val2 = getattr(transformer2, key)
         if val is None:
             assert val2 is None
+        elif isinstance(val, str):
+            assert val == val2
         else:
             assert np.allclose(val, val2)
 
