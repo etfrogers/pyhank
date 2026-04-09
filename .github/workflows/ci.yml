@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        python-version: ["3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
     steps:
     - uses: actions/checkout@v4
     - name: Cache pip dependencies
@@ -39,19 +39,9 @@ jobs:
       run: |
         python -m build
         pip install --upgrade ./dist/*.whl
-    - name: Check NumPy Config
-      run:  |
-        python -c "import numpy as np; np.show_config()"
-        python -c "import sys; print('GIL Enabled:', sys._is_gil_enabled())"
     - name: Test with pytest
-      env:
-          OPENBLAS_NUM_THREADS: "1"
-          MKL_NUM_THREADS: "1"
-          OMP_NUM_THREADS: "1"
-          NUMEXPR_NUM_THREADS: "1"
       run: |
-        pip install pytest-timeout
-        pytest --cov=./ --flake8 --durations=10 --timeout=800
+        pytest --cov=./ --flake8
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
