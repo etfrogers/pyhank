@@ -5,6 +5,7 @@ import pytest
 import scipy.special as scipy_bessel
 
 from pyhank import HankelTransform
+from pyhank.hankel import _Jn_spherical_zeros
 
 
 smooth_shapes = [lambda r: np.exp(-r ** 2),
@@ -449,6 +450,37 @@ def test_spherical():
     laplacian = transformer.to_original_r(laplacian)
 
     assert np.allclose(analytical_laplacian, laplacian, rtol=00.1, atol=0.001)
+
+
+def test_Jn_spherical_zeros():
+    n = 0
+    # zeros are n*pi for n = 0
+    zs = _Jn_spherical_zeros(n, 10)
+    assert np.allclose(zs, np.pi * np.arange(1, 11))
+
+    # https://www.researchgate.net/figure/Zeros-of-the-spherical-Bessel-functions_tbl1_348819348
+    # n, j0​(x),   j1​(x),   j2​(x),   j3​(x),   j4​(x)
+    # 1, 3.14159, 4.49341, 5.76346, 6.98793, 8.18256
+    # 2, 6.28319, 7.72525, 9.09501, 10.4171, 11.7049
+    # 3, 9.42478, 10.9041, 12.3229, 13.6980, 15.0397
+    # 4, 12.5664, 14.0662, 15.5146, 16.9236, 18.3013
+    # 5, 15.7080, 17.2208, 18.6890, 20.1218, 21.5254
+
+    expected_zeros = np.array([
+        [3.14159, 4.49341, 5.76346, 6.98793, 8.18256],
+        [6.28319, 7.72525, 9.09501, 10.4171, 11.7049],
+        [9.42478, 10.9041, 12.3229, 13.6980, 15.0397],
+        [12.5664, 14.0662, 15.5146, 16.9236, 18.3013],
+        [15.7080, 17.2208, 18.6890, 20.1218, 21.5254]
+    ])
+    for n in range(0, 5):
+        zs = _Jn_spherical_zeros(n, 5)
+        assert np.allclose(zs, expected_zeros[:, n], atol=1e-5)
+
+    # test that the zeros are actually zeros of the spherical Bessel function
+    for n in range(0, 10):
+        zs = _Jn_spherical_zeros(n, 10)
+        assert np.allclose(scipy_bessel.spherical_jn(n, zs), 0)
 
 
 def test_spherical_error_message():

@@ -107,7 +107,7 @@ class HankelTransform:
         if bessel_type == "polar":
             alpha = scipy_bessel.jn_zeros(self.order, self.n_points + 1)
         elif bessel_type == "spherical":
-            alpha = _Jn_zeros(self.order, self.n_points + 1)
+            alpha = _Jn_spherical_zeros(self.order, self.n_points + 1)
         else:
             raise ValueError(usage)
 
@@ -353,7 +353,7 @@ def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray, axis: int) -> np.ndar
 
 
 # adapted from SciPy Cookbook https://scipy-cookbook.readthedocs.io/items/SphericalBesselZeros.html
-def _Jn_zeros(n, nt):
+def _Jn_spherical_zeros(n, nt):
     zerosj = np.zeros((n+1, nt), dtype=float)
     zerosj[0] = np.arange(1, nt+1)*np.pi
     if n == 0:
