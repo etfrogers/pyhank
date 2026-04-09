@@ -15,7 +15,8 @@ class HankelTransform:
         (angular frequency or wavenumber space).
 
         The constructor has one required argument (``order``). The remaining five arguments offer
-        three different ways of specifying the radial (and therefore implicitly the frequency) points and type of Bessel functions:
+        three different ways of specifying the radial (and therefore implicitly the frequency) points
+        and type of Bessel functions:
 
         1. Supply both a maximum radius ``r_max`` and number of transform points ``n_points``
         2. Supply the original (often equally spaced) ``radial_grid`` on which you currently
@@ -350,20 +351,22 @@ def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray, axis: int) -> np.ndar
     f = interpolate.interp1d(x0, y0, axis=axis, fill_value='extrapolate', kind='cubic')
     return f(x)
 
+
 # adapted from SciPy Cookbook https://scipy-cookbook.readthedocs.io/items/SphericalBesselZeros.html
-def _Jn_zeros(n,nt):
+def _Jn_zeros(n, nt):
     zerosj = np.zeros((n+1, nt), dtype=float)
-    zerosj[0] = np.arange(1,nt+1)*np.pi
+    zerosj[0] = np.arange(1, nt+1)*np.pi
     if n == 0:
         return (zerosj[0])
-    points = np.arange(1,nt+n+1)*np.pi
+    points = np.arange(1, nt+n+1)*np.pi
     racines = np.zeros(nt+n, dtype=float)
+
     def Jn(r, n):
-         return scipy_bessel.spherical_jn(n, r)
-    for i in range(1,n+1):
+        return scipy_bessel.spherical_jn(n, r)
+    for i in range(1, n+1):
         for j in range(nt+n-i):
-          foo = brentq(Jn, points[j], points[j+1], (i,))
-          racines[j] = foo
+            foo = brentq(Jn, points[j], points[j+1], (i,))
+            racines[j] = foo
         points = racines
         zerosj[i][:nt] = racines[:nt]
     return (zerosj[-1])

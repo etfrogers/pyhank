@@ -431,10 +431,11 @@ def test_sinc(p):
     assert np.all(dynamical_error < -10)
     assert np.all(dynamical_error[not_near_gamma] < -35)
 
+
 # test spherical Hankel transform
 def test_spherical():
     # This test checks whether Laplacian of a Gaussian is calculated correctly
-    r = np.linspace(0,10,100)
+    r = np.linspace(0, 10, 100)
     function = np.exp(-r**2/2)
     analytical_laplacian = np.exp(-r**2/2)*(r**2-3)
 
