@@ -449,3 +449,9 @@ def test_spherical():
     laplacian = transformer.to_original_r(laplacian)
 
     assert np.allclose(analytical_laplacian, laplacian, rtol=00.1, atol=0.001)
+
+
+def test_spherical_error_message():
+    r = np.linspace(0, 10, 100)
+    with pytest.raises(ValueError, match="Available types of Bessel functions are `polar` and `spherical`"):
+        _ = HankelTransform(order=0, radial_grid=r, bessel_type="bad_bessel_type")

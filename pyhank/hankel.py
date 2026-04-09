@@ -139,7 +139,7 @@ class HankelTransform:
             jp1 = np.abs(scipy_bessel.spherical_jn(order + 1, self.alpha))
             self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S) / np.sqrt(2*len(self.r))
         else:
-            raise ValueError(usage)
+            raise ValueError(usage)  # pragma: no cover - backup case: cannot currently be reached
 
         self.JR = jp1 / self.max_radius
         self.JV = jp1 / self.v_max
