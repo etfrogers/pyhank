@@ -57,7 +57,7 @@ plt.plot(kr, expected_ht, label="Analytical")
 plt.plot(kr, actual_ht, marker="x", linestyle="None", label="QDHT")
 plt.title("Hankel transform - also Gaussian")
 plt.xlabel("Frequency /$v$")
-plt.xlim([0, 50])
+plt.xlim((0, 50))
 plt.legend()
 plt.tight_layout()
 
@@ -78,7 +78,7 @@ plt.plot(r, expected_f, label="Analytical")
 plt.plot(r, actual_f, marker="x", linestyle="None", label="QDHT")
 plt.title("Original function after IQDHT - also Gaussian")
 plt.xlabel("Frequency /$v$")
-plt.xlim([0, 1.2])
+plt.xlim((0, 1.2))
 plt.legend()
 plt.tight_layout()
 
@@ -99,9 +99,7 @@ def generalised_top_hat(r: np.ndarray, a: float, p: int) -> np.ndarray:
 
 def generalised_jinc(v: np.ndarray, a: float, p: int):
     val = np.zeros_like(v)
-    val[v != 0] = (
-        a ** (p + 1) * scipy_bessel.jv(p + 1, 2 * np.pi * a * v[v != 0]) / v[v != 0]
-    )
+    val[v != 0] = a ** (p + 1) * scipy_bessel.jv(p + 1, 2 * np.pi * a * v[v != 0]) / v[v != 0]
     if p == -1:
         val[v == 0] = np.inf
     elif p == -2:
@@ -137,7 +135,7 @@ for order in [0, 1, 4]:
     plt.plot(v, actual_ht, marker="x", linestyle="None", label="QDHT")
     plt.title(f"Hankel transform - generalised top-hat, order = {order}")
     plt.xlabel("Frequency /$v$")
-    plt.xlim([0, 1.5])
+    plt.xlim((0, 1.5))
     plt.legend()
     plt.tight_layout()
 
@@ -164,7 +162,7 @@ for order in [0, 1, 4]:
     plt.plot(transformer.v, actual_ht, marker="x", linestyle="None", label="QDHT")
     plt.title(f"Hankel transform - generalised jinc, order = {order}")
     plt.xlabel("Frequency /$v$")
-    plt.xlim([0, 20])
+    plt.xlim((0, 20))
     plt.legend()
     plt.tight_layout()
 
@@ -190,13 +188,13 @@ plt.subplot(2, 1, 1)
 plt.title("$\\frac{1}{r^2 + a^2}$")
 plt.plot(radius, f)
 plt.xlabel("Radius /$r$")
-plt.xlim([0, 20])
+plt.xlim((0, 20))
 
 plt.subplot(2, 1, 2)
 plt.plot(transformer.kr, expected_ht, label="Analytical")
 plt.plot(transformer.kr, actual_ht, marker="x", linestyle="None", label="QDHT")
 plt.title(r"Hankel transform - $2 \pi K_0(ak)$")
 plt.xlabel("Frequency /$v$")
-plt.xlim([0, 8])
+plt.xlim((0, 8))
 plt.legend()
 plt.tight_layout()

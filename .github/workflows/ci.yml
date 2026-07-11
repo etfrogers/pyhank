@@ -39,10 +39,14 @@ jobs:
         run: |
           python -m build
           pip install --upgrade ./dist/*.whl
+      - name: Lint with Ruff
+        uses: astral-sh/ruff-action@v3
+        with:
+          # Runs `ruff check .` by default
+          args: "check ."
       - name: Test with pytest
         run: |
           pytest --cov=./
-          flake8
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -67,7 +71,6 @@ jobs:
         run: |
           python -m build
           pytest
-          flake8
 
   build-docs:
     runs-on: ubuntu-latest

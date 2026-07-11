@@ -22,6 +22,7 @@ import numpy as np
 # %%
 # Then the functions from this package
 from pyhank import HankelTransform
+
 # noinspection PyUnresolvedReferences
 from helper import gauss1d, imagesc
 
@@ -52,7 +53,7 @@ H = HankelTransform(order=0, radial_grid=r)
 # %%
 # Set up the electric field profile at :math:`z = 0`, and resample onto the correct radial grid
 # (``transformer.r``) as required for the QDHT.
-Er = gauss1d(r, 0, Dr)   # Initial field
+Er = gauss1d(r, 0, Dr)  # Initial field
 ErH = H.to_transform_r(Er)  # Resampled field
 
 # %%
@@ -69,7 +70,7 @@ EkrH = H.qdht(ErH)
 
 # Pre-allocate an array for field as a function of r and z
 Erz = np.zeros((nr, Nz), dtype=complex)
-kz = np.sqrt(k0 ** 2 - H.kr ** 2)
+kz = np.sqrt(k0**2 - H.kr**2)
 for i, z_loop in enumerate(z):
     phi_z = kz * z_loop  # Propagation phase
     EkrHz = EkrH * np.exp(1j * phi_z)  # Apply propagation
@@ -83,20 +84,29 @@ Irz = np.abs(Erz) ** 2
 # Plot the initial field and radial wavevector distribution (given by the
 # Hankel transform)
 plt.figure()
-plt.plot(r * 1e3, np.abs(Er) ** 2, r * 1e3, np.unwrap(np.angle(Er)),
-         H.r * 1e3, np.abs(ErH) ** 2, H.r * 1e3, np.unwrap(np.angle(ErH)), '+')
-plt.title('Initial electric field distribution')
-plt.xlabel('Radial co-ordinate (r) /mm')
-plt.ylabel('Field intensity /arb.')
-plt.legend(['$|E(r)|^2$', '$\\phi(r)$', '$|E(H.r)|^2$', '$\\phi(H.r)$'])
-plt.axis([0, 1, 0, 1])
+plt.plot(
+    r * 1e3,
+    np.abs(Er) ** 2,
+    r * 1e3,
+    np.unwrap(np.angle(Er)),
+    H.r * 1e3,
+    np.abs(ErH) ** 2,
+    H.r * 1e3,
+    np.unwrap(np.angle(ErH)),
+    "+",
+)
+plt.title("Initial electric field distribution")
+plt.xlabel("Radial co-ordinate (r) /mm")
+plt.ylabel("Field intensity /arb.")
+plt.legend(["$|E(r)|^2$", "$\\phi(r)$", "$|E(H.r)|^2$", "$\\phi(H.r)$"])
+plt.axis((0, 1, 0, 1))
 
 plt.figure()
 plt.plot(H.kr, np.abs(EkrH) ** 2)
-plt.title('Radial wave-vector distribution')
-plt.xlabel(r'Radial wave-vector ($k_r$) /rad $m^{-1}$')
-plt.ylabel('Field intensity /arb.')
-plt.axis([0, 3e4, 0, np.max(np.abs(EkrH) ** 2)])
+plt.title("Radial wave-vector distribution")
+plt.xlabel(r"Radial wave-vector ($k_r$) /rad $m^{-1}$")
+plt.ylabel("Field intensity /arb.")
+plt.axis((0.0, 3e4, 0.0, np.max(np.abs(EkrH) ** 2)))  # pyright: ignore[reportArgumentType]
 
 # %%
 # Now plot an image showing the intensity as a function of
@@ -104,10 +114,10 @@ plt.axis([0, 3e4, 0, np.max(np.abs(EkrH) ** 2)])
 
 plt.figure()
 imagesc(z * 1e3, r * 1e3, Irz)
-plt.title('Radial field intensity as a function of propagation for annular beam')
-plt.xlabel('Propagation distance ($z$) /mm')
-plt.ylabel('Radial position ($r$) /mm')
-plt.ylim([0, 1])
+plt.title("Radial field intensity as a function of propagation for annular beam")
+plt.xlabel("Propagation distance ($z$) /mm")
+plt.ylabel("Radial position ($r$) /mm")
+plt.ylim((0, 1))
 
 # %%
 # The plot above shows a reduction of intensity with :math:`z`, but it is
@@ -118,15 +128,15 @@ Irz_norm = Irz / Irz[0, :]
 
 plt.figure()
 imagesc(z * 1e3, r * 1e3, Irz_norm)
-plt.xlabel('Propagation distance ($z$) /mm')
-plt.ylabel('Radial position ($r$) /mm')
-plt.ylim([0, 1])
+plt.xlabel("Propagation distance ($z$) /mm")
+plt.ylabel("Radial position ($r$) /mm")
+plt.ylim((0, 1))
 
 
 # %%
 # Propagate the beam - vectorised
 # -------------------------------
-kz = np.sqrt(k0 ** 2 - H.kr ** 2)
+kz = np.sqrt(k0**2 - H.kr**2)
 phi_z = kz[:, np.newaxis] * z[np.newaxis, :]  # Propagation phase
 EkrHz = EkrH[:, np.newaxis] * np.exp(1j * phi_z)  # Apply propagation
 ErHz = H.iqdht(EkrHz)  # iQDHT
@@ -137,10 +147,10 @@ Irz_vectorised = np.abs(Erz) ** 2
 # Now plot the result to check it is the same as the loop approach
 plt.figure()
 imagesc(z * 1e3, r * 1e3, Irz_vectorised)
-plt.title('Radial field intensity as a function of propagation for annular beam')
-plt.xlabel('Propagation distance ($z$) /mm')
-plt.ylabel('Radial position ($r$) /mm')
-plt.ylim([0, 1])
+plt.title("Radial field intensity as a function of propagation for annular beam")
+plt.xlabel("Propagation distance ($z$) /mm")
+plt.ylabel("Radial position ($r$) /mm")
+plt.ylim((0, 1))
 
 # %%
 # Assert the two approaches produce the same intensity

@@ -30,7 +30,7 @@ f[r == 0] = 0.5
 
 plt.figure()
 plt.plot(r, f)
-plt.xlabel('Radius /m')
+plt.xlabel("Radius /m")
 
 # %%
 # Now take the Hankel transform using ``qdht``:
@@ -38,8 +38,8 @@ kr, ht = qdht(r, f)
 
 plt.figure()
 plt.plot(kr, ht)
-plt.xlim([0, 5])
-plt.xlabel('Radial wavevector /m$^{-1}$')
+plt.xlim((0, 5))
+plt.xlabel("Radial wavevector /m$^{-1}$")
 
 # %%
 # As expected, this is a top-hat function bandlimited to :math:`k<1`, except for numerical error.

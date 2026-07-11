@@ -10,6 +10,7 @@ at an arbitrary set of points in radius [wave-number] space.
 Here we will use the same example application as :ref:`sphx_glr_auto_examples_usage_example.py`:
 a beam-propagation method propagation of a radially-symmetric Gaussian beam.
 """
+
 import time
 
 import numpy as np
@@ -34,7 +35,7 @@ Dr = 100e-6  # Beam radius (100um)
 lambda_ = 488e-9  # wavelength 488nm
 k0 = 2 * np.pi / lambda_  # Vacuum k vector
 
-field = gauss1d(r, 0, Dr)   # Initial field
+field = gauss1d(r, 0, Dr)  # Initial field
 
 
 # %%
@@ -47,7 +48,7 @@ def propagate_using_object(r: np.ndarray, field: np.ndarray) -> np.ndarray:
     hankel_transform = transformer.qdht(field_for_transform)
 
     propagated_field = np.zeros((nr, Nz), dtype=complex)
-    kz = np.sqrt(k0 ** 2 - transformer.kr ** 2)
+    kz = np.sqrt(k0**2 - transformer.kr**2)
     for n, z_loop in enumerate(z):
         phi_z = kz * z_loop  # Propagation phase
         hankel_transform_at_z = hankel_transform * np.exp(1j * phi_z)  # Apply propagation
@@ -61,13 +62,14 @@ def propagate_using_single_shot(r: np.ndarray, field: np.ndarray) -> np.ndarray:
     kr, hankel_transform = qdht(r, field)
 
     propagated_field = np.zeros((nr, Nz), dtype=complex)
-    kz = np.sqrt(k0 ** 2 - kr ** 2)
+    kz = np.sqrt(k0**2 - kr**2)
     for n, z_loop in enumerate(z):
         phi_z = kz * z_loop  # Propagation phase
         hankel_transform_at_z = hankel_transform * np.exp(1j * phi_z)  # Apply propagation
         r_transform, field_at_z_transform_grid = iqdht(kr, hankel_transform_at_z)  # iQDHT
-        f = interpolate.interp1d(r_transform, field_at_z_transform_grid, axis=0,
-                                 fill_value='extrapolate', kind='cubic')
+        f = interpolate.interp1d(
+            r_transform, field_at_z_transform_grid, axis=0, fill_value="extrapolate", kind="cubic"
+        )
         propagated_field[:, n] = f(r)
     intensity = np.abs(propagated_field) ** 2
     return intensity
@@ -78,12 +80,12 @@ def propagate_using_single_shot(r: np.ndarray, field: np.ndarray) -> np.ndarray:
 tic = time.time()
 single_shot_intensity = propagate_using_single_shot(r, field)
 toc = time.time()
-print(f'Single shot propagation took {toc-tic:.2f} s')
+print(f"Single shot propagation took {toc - tic:.2f} s")
 
 tic = time.time()
 object_intensity = propagate_using_object(r, field)
 toc = time.time()
-print(f'Object propagation took {toc-tic:.2f} s')
+print(f"Object propagation took {toc - tic:.2f} s")
 
 
 # %%
@@ -94,15 +96,15 @@ print(f'Object propagation took {toc-tic:.2f} s')
 plt.figure()
 plt.subplot(2, 1, 1)
 imagesc(z * 1e3, r * 1e3, single_shot_intensity)
-plt.xlabel('Propagation distance ($z$) /mm')
-plt.ylabel('Radial position ($r$) /mm')
+plt.xlabel("Propagation distance ($z$) /mm")
+plt.ylabel("Radial position ($r$) /mm")
 plt.colorbar()
-plt.ylim([0, 1])
+plt.ylim((0, 1))
 
 plt.subplot(2, 1, 2)
 imagesc(z * 1e3, r * 1e3, object_intensity)
-plt.xlabel('Propagation distance ($z$) /mm')
-plt.ylabel('Radial position ($r$) /mm')
-plt.ylim([0, 1])
+plt.xlabel("Propagation distance ($z$) /mm")
+plt.ylabel("Radial position ($r$) /mm")
+plt.ylim((0, 1))
 plt.colorbar()
 plt.tight_layout()
