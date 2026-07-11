@@ -3,9 +3,22 @@ from collections.abc import Callable
 import numpy as np
 import pytest
 import scipy.special as scipy_bessel
-from pyhank.hankel import _Jn_spherical_zeros
 
-from pyhank import HankelTransform
+# Always import the pure Python version
+from pyhank import HankelTransform, _pure_python
+from pyhank._pure_python.hankel import _Jn_spherical_zeros
+
+# Build our list of backends to test
+BACKENDS = [pytest.param(_pure_python, id="pure_python")]
+
+# Try to import the Rust extension and add it to the test matrix if available
+try:
+    from pyhank import _pyhank_native  # type: ignore
+
+    BACKENDS.append(pytest.param(_pyhank_native, id="rust_native"))
+except ImportError:
+    # Optional: You can emit a warning or just silently skip
+    pass
 
 smooth_shapes = [lambda r: np.exp(-(r**2)), lambda r: r, lambda r: r**2, lambda r: 1 / np.sqrt(r**2 + 0.1**2)]
 
@@ -34,10 +47,19 @@ def generalised_jinc(v: np.ndarray, a: float, p: int):
     return val
 
 
+@pytest.fixture(params=BACKENDS)
+def backend(request):
+    """
+    Yields the available backends one by one.
+    request.param contains the actual module passed in the params list.
+    """
+    return request.param
+
+
 @pytest.fixture(params=orders)
-def transformer(request, radius) -> HankelTransform:
+def transformer(request, radius, backend) -> HankelTransform:
     order = request.param
-    return HankelTransform(order, radial_grid=radius)
+    return backend.HankelTransform(order, radial_grid=radius)
 
 
 @pytest.mark.parametrize("shape", all_shapes)

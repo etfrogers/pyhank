@@ -1,5 +1,7 @@
 import pyhank._pyhank_native as native
 
+import pyhank._pure_python as pure_python
 
-def test_native():
-    assert native.sum_as_string(1, 2) == "3"
+
+def test_native_vs_pure_python():
+    raise NotImplementedError
