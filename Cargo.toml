@@ -1,0 +1,17 @@
+# Cargo.toml
+[package]
+name = "pyhank-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pyo3 = "0.25"
+
+[lib]
+name = "_pyhank_native"  # private module to be nested into Python package,
+               # needs to match the name of the function with the `[#pymodule]` attribute
+path = "rust/lib.rs"
+crate-type = ["cdylib"]  # required for shared library for Python to import from.
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# See also PyO3 docs on writing Cargo.toml files at https://pyo3.rs

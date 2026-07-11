@@ -12,3 +12,5 @@ pyhank.egg-info/
 .DS_Store
 *.lprof
 venv/
+target/
+*.so
