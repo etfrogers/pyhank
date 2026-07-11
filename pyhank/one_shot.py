@@ -5,8 +5,9 @@ import numpy as np
 from pyhank import HankelTransform
 
 
-def qdht(r: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2,
-         bessel_type: str = "polar") -> Tuple[np.ndarray, np.ndarray]:
+def qdht(
+    r: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2, bessel_type: str = "polar"
+) -> Tuple[np.ndarray, np.ndarray]:
     """Perform a quasi-discrete Hankel transform of the function ``f`` (sampled at points
     ``r``) and return the transformed function and its sample points in :math:`k`-space.
 
@@ -30,14 +31,15 @@ def qdht(r: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2,
     :return: A tuple containing the k coordinates of the transformed function and its values
     :rtype: (:class:`numpy.ndarray`, :class:`numpy.ndarray`)
     """
-    transformer = HankelTransform(order=order, radial_grid=r,  bessel_type=bessel_type)
+    transformer = HankelTransform(order=order, radial_grid=r, bessel_type=bessel_type)
     f_transform = transformer.to_transform_r(f, axis=axis)
     ht = transformer.qdht(f_transform, axis=axis)
     return transformer.kr, ht
 
 
-def iqdht(k: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2,
-          bessel_type: str = "polar") -> Tuple[np.ndarray, np.ndarray]:
+def iqdht(
+    k: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2, bessel_type: str = "polar"
+) -> Tuple[np.ndarray, np.ndarray]:
     """Perform a inverse quasi-discrete Hankel transform of the function ``f`` (sampled at points
     ``k``) and return the transformed function and its sample points in radial space.
 

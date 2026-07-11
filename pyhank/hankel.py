@@ -9,92 +9,94 @@ from scipy.optimize import brentq
 class HankelTransform:
     r"""The main class for performing Hankel Transforms
 
-        For the QDHT to work, the function must be sampled a specific points, which this class generates
-        and stores in :attr:`HankelTransform.r`. Any transform on this grid will be sampled at points
-        :attr:`.HankelTransform.v` (frequency space) or equivalently :attr:`.HankelTransform.kr`
-        (angular frequency or wavenumber space).
+    For the QDHT to work, the function must be sampled a specific points, which this class generates
+    and stores in :attr:`HankelTransform.r`. Any transform on this grid will be sampled at points
+    :attr:`.HankelTransform.v` (frequency space) or equivalently :attr:`.HankelTransform.kr`
+    (angular frequency or wavenumber space).
 
-        The constructor has one required argument (``order``). The remaining five arguments offer
-        three different ways of specifying the radial (and therefore implicitly the frequency) points
-        and type of Bessel functions:
+    The constructor has one required argument (``order``). The remaining five arguments offer
+    three different ways of specifying the radial (and therefore implicitly the frequency) points
+    and type of Bessel functions:
 
-        1. Supply both a maximum radius ``r_max`` and number of transform points ``n_points``
-        2. Supply the original (often equally spaced) ``radial_grid`` on which you currently
-           have sample points. This approach allows easy conversion from the original grid using
-           :meth:`.HankelTransform.to_transform_r()`. ``t = HankelTransform(order, radial_grid=r)``
-           is effectively equivalent to ``t = HankelTransform(order, n_points=r.size, r_max=np.max(r))``
-           except for the fact the original radial grid is stored in the :class:`.HankelTransform`
-           object for use in :meth:`~.HankelTransform.to_transform_r` and
-           :meth:`~.HankelTransform.to_original_r`.
-        3. Supply the original (often equally spaced) :math:`k`-space grid on which you
-           currently have sample points. This is most use if you intend to do inverse
-           transforms. It allows easy conversion to and from the original grid using
-           :meth:`~.HankelTransform.to_original_k()` and :meth:`~.HankelTransform.to_transform_k()`.
-           As in option 2, :attr:`.HankelTransform.n_points` is determined by ``k_grid.size``.
-           :attr:`HankelTransform.r_max` is determined in a more complex way from ``np.max(k_grid)``.
+    1. Supply both a maximum radius ``r_max`` and number of transform points ``n_points``
+    2. Supply the original (often equally spaced) ``radial_grid`` on which you currently
+       have sample points. This approach allows easy conversion from the original grid using
+       :meth:`.HankelTransform.to_transform_r()`. ``t = HankelTransform(order, radial_grid=r)``
+       is effectively equivalent to ``t = HankelTransform(order, n_points=r.size, r_max=np.max(r))``
+       except for the fact the original radial grid is stored in the :class:`.HankelTransform`
+       object for use in :meth:`~.HankelTransform.to_transform_r` and
+       :meth:`~.HankelTransform.to_original_r`.
+    3. Supply the original (often equally spaced) :math:`k`-space grid on which you
+       currently have sample points. This is most use if you intend to do inverse
+       transforms. It allows easy conversion to and from the original grid using
+       :meth:`~.HankelTransform.to_original_k()` and :meth:`~.HankelTransform.to_transform_k()`.
+       As in option 2, :attr:`.HankelTransform.n_points` is determined by ``k_grid.size``.
+       :attr:`HankelTransform.r_max` is determined in a more complex way from ``np.max(k_grid)``.
 
-        By setting the argument ``bessel_type`` to either ``"polar"`` od ``"spherical"`` it is possible
-        to choose between :math:`J_n` and :math:`j_n` Bessel functions (default is ``"polar"``).
+    By setting the argument ``bessel_type`` to either ``"polar"`` od ``"spherical"`` it is possible
+    to choose between :math:`J_n` and :math:`j_n` Bessel functions (default is ``"polar"``).
 
-        :parameter order: Transform order :math:`p`
-        :type order: :class:`int`
-        :parameter max_radius: (Optional) Radial extent of transform :math:`r_\textrm{max}`
-        :type max_radius: :class:`float`
-        :parameter n_points: (Optional) Number of sample points :math:`N`
-        :type n_points: :class:`int`
-        :parameter radial_grid: (Optional) The radial grid that will be used to sample input functions
-            it is used to set `N` and :math:`r_\textrm{max}` by ``n_points = radial_grid.size`` and
-            ``r_max = np.max(radial_grid)``
-        :type radial_grid: :class:`numpy.ndarray`
-        :parameter k_grid: (Optional) Number of sample points :math:`N`
-        :type k_grid: :class:`numpy.ndarray`
-        :parameter bessel_type: (Optional) Type of Bessel functions used to compute the transform
-        :type bessel_type: :class:`str`
+    :parameter order: Transform order :math:`p`
+    :type order: :class:`int`
+    :parameter max_radius: (Optional) Radial extent of transform :math:`r_\textrm{max}`
+    :type max_radius: :class:`float`
+    :parameter n_points: (Optional) Number of sample points :math:`N`
+    :type n_points: :class:`int`
+    :parameter radial_grid: (Optional) The radial grid that will be used to sample input functions
+        it is used to set `N` and :math:`r_\textrm{max}` by ``n_points = radial_grid.size`` and
+        ``r_max = np.max(radial_grid)``
+    :type radial_grid: :class:`numpy.ndarray`
+    :parameter k_grid: (Optional) Number of sample points :math:`N`
+    :type k_grid: :class:`numpy.ndarray`
+    :parameter bessel_type: (Optional) Type of Bessel functions used to compute the transform
+    :type bessel_type: :class:`str`
 
-        :ivar alpha: The first :math:`N` Roots of the :math:`p` th order Bessel function.
-        :ivar alpha_n1: (N+1)th root :math:`\alpha_{N1}`
-        :ivar r: Radial co-ordinate vector
-        :ivar v: frequency co-ordinate vector
-        :ivar kr: Radial wave number co-ordinate vector
-        :ivar v_max: Limiting frequency :math:`v_\textrm{max} = \alpha_{N1}/(2 \pi R)`
-        :ivar S: RV product :math:`2\pi r_\textrm{max} v_max`
-        :ivar T: Transform matrix
-        :ivar JR: Radius transform vector :math:`J_R = J_{p+1}(\alpha) / r_\textrm{max}`
-        :ivar JV: Frequency transform vector :math:`J_V = J_{p+1}(\alpha) / v_\textrm{max}`
+    :ivar alpha: The first :math:`N` Roots of the :math:`p` th order Bessel function.
+    :ivar alpha_n1: (N+1)th root :math:`\alpha_{N1}`
+    :ivar r: Radial co-ordinate vector
+    :ivar v: frequency co-ordinate vector
+    :ivar kr: Radial wave number co-ordinate vector
+    :ivar v_max: Limiting frequency :math:`v_\textrm{max} = \alpha_{N1}/(2 \pi R)`
+    :ivar S: RV product :math:`2\pi r_\textrm{max} v_max`
+    :ivar T: Transform matrix
+    :ivar JR: Radius transform vector :math:`J_R = J_{p+1}(\alpha) / r_\textrm{max}`
+    :ivar JV: Frequency transform vector :math:`J_V = J_{p+1}(\alpha) / v_\textrm{max}`
 
-        The algorithm used is that from:
+    The algorithm used is that from:
 
-            *"Computation of quasi-discrete Hankel transforms of the integer
-            order for propagating optical wave fields"*
-            Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
-            J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
+        *"Computation of quasi-discrete Hankel transforms of the integer
+        order for propagating optical wave fields"*
+        Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
+        J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
 
-        The algorithm also calls the function :func:`scipy.special.jn_zeros` to calculate
-        the roots of the bessel function.
-        """
+    The algorithm also calls the function :func:`scipy.special.jn_zeros` to calculate
+    the roots of the bessel function.
+    """
 
-    def __init__(self,
+    def __init__(
+        self,
         order: int,
         max_radius: Optional[float] = None,
         n_points: Optional[int] = None,
         radial_grid: Optional[np.ndarray] = None,
         k_grid: Optional[np.ndarray] = None,
-        bessel_type: str = "polar"):
+        bessel_type: str = "polar",
+    ):
         """Constructor"""
 
-        usage = 'Either radial_grid or k_grid or both max_radius and n_points must be supplied'
+        usage = "Either radial_grid or k_grid or both max_radius and n_points must be supplied"
         if radial_grid is None and k_grid is None:
             if max_radius is None or n_points is None:
                 raise ValueError(usage)
         elif k_grid is not None:
             if max_radius is not None or n_points is not None or radial_grid is not None:
                 raise ValueError(usage)
-            assert k_grid.ndim == 1, 'k grid must be a 1d array'
+            assert k_grid.ndim == 1, "k grid must be a 1d array"
             n_points = k_grid.size
         elif radial_grid is not None:
             if max_radius is not None or n_points is not None:
                 raise ValueError(usage)
-            assert radial_grid.ndim == 1, 'Radial grid must be a 1d array'
+            assert radial_grid.ndim == 1, "Radial grid must be a 1d array"
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
         else:
@@ -107,7 +109,7 @@ class HankelTransform:
         self.bessel_type = bessel_type
 
         # Calculate N+1 roots must be calculated before max_radius can be derived from k_grid
-        usage = 'Available types of Bessel functions are `polar` and `spherical`'
+        usage = "Available types of Bessel functions are `polar` and `spherical`"
         alpha = None
         if bessel_type == "polar":
             alpha = scipy_bessel.jn_zeros(self.order, self.n_points + 1)
@@ -139,7 +141,7 @@ class HankelTransform:
         elif bessel_type == "spherical":
             jp = scipy_bessel.spherical_jn(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
             jp1 = np.abs(scipy_bessel.spherical_jn(order + 1, self.alpha))
-            self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S) / np.sqrt(2*len(self.r))
+            self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S) / np.sqrt(2 * len(self.r))
         else:
             raise ValueError(usage)  # pragma: no cover - backup case: cannot currently be reached
 
@@ -160,28 +162,31 @@ class HankelTransform:
 
     @property
     def original_radial_grid(self) -> np.ndarray:
-        """ Return the original radial grid used to construct the object, or raise a :class:`ValueError`
+        """Return the original radial grid used to construct the object, or raise a :class:`ValueError`
         if the constructor was not called specifying a ``radial_grid`` parameter.
 
         :return: The original radial grid used to construct the object.
         :rtype: :class:`numpy.ndarray`
         """
         if self._original_radial_grid is None:
-            raise ValueError('Attempted to access original_radial_grid on HankelTransform '
-                             'object that was not constructed with a radial_grid')
+            raise ValueError(
+                "Attempted to access original_radial_grid on HankelTransform "
+                "object that was not constructed with a radial_grid"
+            )
         return self._original_radial_grid
 
     @property
     def original_k_grid(self) -> np.ndarray:
-        """ Return the original k grid used to construct the object, or raise a :class:`ValueError`
+        """Return the original k grid used to construct the object, or raise a :class:`ValueError`
         if the constructor was not called specifying a ``k_grid`` parameter.
 
         :return: The original k grid used to construct the object.
         :rtype: :class:`numpy.ndarray`
         """
         if self._original_k_grid is None:
-            raise ValueError('Attempted to access original_k_grid on HankelTransform '
-                             'object that was not constructed with a k_grid')
+            raise ValueError(
+                "Attempted to access original_k_grid on HankelTransform object that was not constructed with a k_grid"
+            )
         return self._original_k_grid
 
     def to_transform_r(self, function: np.ndarray, axis: int = 0) -> np.ndarray:
@@ -350,25 +355,26 @@ class HankelTransform:
 
 
 def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray, axis: int) -> np.ndarray:
-    f = interpolate.interp1d(x0, y0, axis=axis, fill_value='extrapolate', kind='cubic')
+    f = interpolate.interp1d(x0, y0, axis=axis, fill_value="extrapolate", kind="cubic")
     return f(x)
 
 
 # adapted from SciPy Cookbook https://scipy-cookbook.readthedocs.io/items/SphericalBesselZeros.html
 def _Jn_spherical_zeros(n, nt):
-    zerosj = np.zeros((n+1, nt), dtype=float)
-    zerosj[0] = np.arange(1, nt+1)*np.pi
+    zerosj = np.zeros((n + 1, nt), dtype=float)
+    zerosj[0] = np.arange(1, nt + 1) * np.pi
     if n == 0:
-        return (zerosj[0])
-    points = np.arange(1, nt+n+1)*np.pi
-    racines = np.zeros(nt+n, dtype=float)
+        return zerosj[0]
+    points = np.arange(1, nt + n + 1) * np.pi
+    racines = np.zeros(nt + n, dtype=float)
 
     def Jn(r, n):
         return scipy_bessel.spherical_jn(n, r)
-    for i in range(1, n+1):
-        for j in range(nt+n-i):
-            foo = brentq(Jn, points[j], points[j+1], (i,))
+
+    for i in range(1, n + 1):
+        for j in range(nt + n - i):
+            foo = brentq(Jn, points[j], points[j + 1], (i,))
             racines[j] = foo
         points = racines
         zerosj[i][:nt] = racines[:nt]
-    return (zerosj[-1])
+    return zerosj[-1]

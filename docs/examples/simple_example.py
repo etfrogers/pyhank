@@ -33,7 +33,7 @@ f = scipy.special.jv(1, transformer.r) / transformer.r
 
 plt.figure()
 plt.plot(transformer.r, f)
-plt.xlabel('Radius /m')
+plt.xlabel("Radius /m")
 
 # %%
 # Now take the Hankel transform using :meth:`.HankelTransform.qdht`
@@ -42,7 +42,7 @@ ht = transformer.qdht(f)
 plt.figure()
 plt.plot(transformer.kr, ht)
 plt.xlim((0, 5))
-plt.xlabel('Radial wavevector /m$^{-1}$')
+plt.xlabel("Radial wavevector /m$^{-1}$")
 
 # %%
 # As expected, this is a top-hat function bandlimited to :math:`k<1`, except for numerical error.
