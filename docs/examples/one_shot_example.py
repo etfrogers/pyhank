@@ -38,7 +38,7 @@ kr, ht = qdht(r, f)
 
 plt.figure()
 plt.plot(kr, ht)
-plt.xlim([0, 5])
+plt.xlim((0, 5))
 plt.xlabel('Radial wavevector /m$^{-1}$')
 
 # %%

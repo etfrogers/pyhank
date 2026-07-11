@@ -93,7 +93,7 @@ plt.plot(transformer.v, expected_ht, label='Analytical')
 plt.plot(transformer.v, ht, marker='x', linestyle='None', label='QDHT')
 plt.title(f'Hankel transform $f_2(v)$, order {p}')
 plt.xlabel('Frequency /$v$')
-plt.xlim([0, 10])
+plt.xlim((0, 10))
 plt.legend()
 
 plt.subplot(2, 1, 2)

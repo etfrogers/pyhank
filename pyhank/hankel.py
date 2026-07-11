@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import scipy.special as scipy_bessel
@@ -73,8 +73,13 @@ class HankelTransform:
         the roots of the bessel function.
         """
 
-    def __init__(self, order: int, max_radius: float = None, n_points: int = None,
-                 radial_grid: np.ndarray = None, k_grid: np.ndarray = None, bessel_type: str = "polar"):
+    def __init__(self,
+        order: int,
+        max_radius: Optional[float] = None,
+        n_points: Optional[int] = None,
+        radial_grid: Optional[np.ndarray] = None,
+        k_grid: Optional[np.ndarray] = None,
+        bessel_type: str = "polar"):
         """Constructor"""
 
         usage = 'Either radial_grid or k_grid or both max_radius and n_points must be supplied'
@@ -117,7 +122,7 @@ class HankelTransform:
         if k_grid is not None:
             v_max = np.max(k_grid) / (2 * np.pi)
             max_radius = self.alpha_n1 / (2 * np.pi * v_max)
-        self._max_radius = max_radius
+        self._max_radius: float = max_radius  # pyright: ignore[reportAttributeAccessIssue]
 
         # Calculate co-ordinate vectors
         self.r = self.alpha * self.max_radius / self.alpha_n1
@@ -127,9 +132,6 @@ class HankelTransform:
         self.S = self.alpha_n1
 
         # Calculate hankel matrix and vectors
-        jp = None
-        jp1 = None
-        self.T = None
         if bessel_type == "polar":
             jp = scipy_bessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
             jp1 = np.abs(scipy_bessel.jv(order + 1, self.alpha))

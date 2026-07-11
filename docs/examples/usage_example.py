@@ -89,14 +89,14 @@ plt.title('Initial electric field distribution')
 plt.xlabel('Radial co-ordinate (r) /mm')
 plt.ylabel('Field intensity /arb.')
 plt.legend(['$|E(r)|^2$', '$\\phi(r)$', '$|E(H.r)|^2$', '$\\phi(H.r)$'])
-plt.axis([0, 1, 0, 1])
+plt.axis((0, 1, 0, 1))
 
 plt.figure()
 plt.plot(H.kr, np.abs(EkrH) ** 2)
 plt.title('Radial wave-vector distribution')
 plt.xlabel(r'Radial wave-vector ($k_r$) /rad $m^{-1}$')
 plt.ylabel('Field intensity /arb.')
-plt.axis([0, 3e4, 0, np.max(np.abs(EkrH) ** 2)])
+plt.axis((0.0, 3e4, 0.0, np.max(np.abs(EkrH) ** 2)))  # pyright: ignore[reportArgumentType]
 
 # %%
 # Now plot an image showing the intensity as a function of
@@ -107,7 +107,7 @@ imagesc(z * 1e3, r * 1e3, Irz)
 plt.title('Radial field intensity as a function of propagation for annular beam')
 plt.xlabel('Propagation distance ($z$) /mm')
 plt.ylabel('Radial position ($r$) /mm')
-plt.ylim([0, 1])
+plt.ylim((0, 1))
 
 # %%
 # The plot above shows a reduction of intensity with :math:`z`, but it is
@@ -120,7 +120,7 @@ plt.figure()
 imagesc(z * 1e3, r * 1e3, Irz_norm)
 plt.xlabel('Propagation distance ($z$) /mm')
 plt.ylabel('Radial position ($r$) /mm')
-plt.ylim([0, 1])
+plt.ylim((0, 1))
 
 
 # %%
@@ -140,7 +140,7 @@ imagesc(z * 1e3, r * 1e3, Irz_vectorised)
 plt.title('Radial field intensity as a function of propagation for annular beam')
 plt.xlabel('Propagation distance ($z$) /mm')
 plt.ylabel('Radial position ($r$) /mm')
-plt.ylim([0, 1])
+plt.ylim((0, 1))
 
 # %%
 # Assert the two approaches produce the same intensity

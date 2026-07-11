@@ -41,7 +41,7 @@ ht = transformer.qdht(f)
 
 plt.figure()
 plt.plot(transformer.kr, ht)
-plt.xlim([0, 5])
+plt.xlim((0, 5))
 plt.xlabel('Radial wavevector /m$^{-1}$')
 
 # %%
