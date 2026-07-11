@@ -3,9 +3,9 @@ from collections.abc import Callable
 import numpy as np
 import pytest
 import scipy.special as scipy_bessel
+from pyhank.hankel import _Jn_spherical_zeros
 
 from pyhank import HankelTransform
-from pyhank.hankel import _Jn_spherical_zeros
 
 smooth_shapes = [lambda r: np.exp(-(r**2)), lambda r: r, lambda r: r**2, lambda r: 1 / np.sqrt(r**2 + 0.1**2)]
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from pyhank import HankelTransform
+from pyhank._pure_python.hankel import HankelTransform
 
 
 def qdht(

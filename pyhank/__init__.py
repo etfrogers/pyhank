@@ -1,4 +1,3 @@
-from .hankel import HankelTransform
-from .one_shot import iqdht, qdht
+from ._pure_python import HankelTransform, iqdht, qdht
 
 __all__ = ["HankelTransform", "iqdht", "qdht"]
