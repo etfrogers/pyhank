@@ -2,6 +2,9 @@
 requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "build"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff]
+line-length=119
+
 [tool.setuptools_scm]
 # This section enables setuptools_scm
 
@@ -36,7 +39,6 @@ Homepage = "https://github.com/etfrogers/pyhank"
 [project.optional-dependencies]
 dev = [
     "pytest~=9.0.2",
-    "flake8~=7.3",
     "pytest-cov~=7.0",
     "setuptools_scm",
 ]
