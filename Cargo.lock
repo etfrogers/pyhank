@@ -183,6 +183,7 @@ dependencies = [
  "num",
  "num-complex",
  "rand 0.9.5",
+ "rayon",
  "rstest_reuse",
 ]
 

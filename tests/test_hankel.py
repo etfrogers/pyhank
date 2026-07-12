@@ -164,46 +164,47 @@ def test_original_r_k_grid():
         _ = transformer.original_radial_grid
 
 
-def test_initialisation_errors():
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_initialisation_errors(backend):
     r_1d = np.linspace(0, 1, 10)
     k_1d = r_1d.copy()
     r_2d = np.repeat(r_1d[:, np.newaxis], repeats=5, axis=1)
     k_2d = r_2d.copy()
     with pytest.raises(ValueError):
         # missing any radius or k info
-        HankelTransform(order=0)
+        backend.HankelTransform(order=0)
     with pytest.raises(ValueError):
         # missing n_points
-        HankelTransform(order=0, max_radius=1)
+        backend.HankelTransform(order=0, max_radius=1)
     with pytest.raises(ValueError):
         # missing max_radius
-        HankelTransform(order=0, n_points=10)
+        backend.HankelTransform(order=0, n_points=10)
     with pytest.raises(ValueError):
         # radial_grid and n_points
-        HankelTransform(order=0, radial_grid=r_1d, n_points=10)
+        backend.HankelTransform(order=0, radial_grid=r_1d, n_points=10)
     with pytest.raises(ValueError):
         # radial_grid and max_radius
-        HankelTransform(order=0, radial_grid=r_1d, max_radius=1)
+        backend.HankelTransform(order=0, radial_grid=r_1d, max_radius=1)
 
     with pytest.raises(ValueError):
         # k_grid and n_points
-        HankelTransform(order=0, k_grid=k_1d, n_points=10)
+        backend.HankelTransform(order=0, k_grid=k_1d, n_points=10)
     with pytest.raises(ValueError):
         # k_grid and max_radius
-        HankelTransform(order=0, k_grid=k_1d, max_radius=1)
+        backend.HankelTransform(order=0, k_grid=k_1d, max_radius=1)
     with pytest.raises(ValueError):
         # k_grid and r_grid
-        HankelTransform(order=0, k_grid=k_1d, radial_grid=r_1d)
+        backend.HankelTransform(order=0, k_grid=k_1d, radial_grid=r_1d)
 
     with pytest.raises(AssertionError):
-        HankelTransform(order=0, radial_grid=r_2d)
+        backend.HankelTransform(order=0, radial_grid=r_2d)
     with pytest.raises(AssertionError):
-        HankelTransform(order=0, radial_grid=k_2d)
+        backend.HankelTransform(order=0, radial_grid=k_2d)
 
     # no error
-    _ = HankelTransform(order=0, max_radius=1, n_points=10)
-    _ = HankelTransform(order=0, radial_grid=r_1d)
-    _ = HankelTransform(order=0, k_grid=k_1d)
+    _ = backend.HankelTransform(order=0, max_radius=1, n_points=10)
+    _ = backend.HankelTransform(order=0, radial_grid=r_1d)
+    _ = backend.HankelTransform(order=0, k_grid=k_1d)
 
 
 @pytest.mark.parametrize("n", [10, 100, 512, 1024])

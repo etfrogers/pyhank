@@ -3,7 +3,7 @@ use numpy::{
     ndarray::Axis, IntoPyArray, PyArray1, PyArray2, PyArrayDyn, PyReadonlyArray1,
     PyReadonlyArrayDyn, PyUntypedArrayMethods, ToPyArray,
 };
-use pyo3::prelude::*;
+use pyo3::{exceptions::PyValueError, prelude::*};
 
 #[pyclass(name = "HankelTransform")]
 pub struct PyHankelTransform {
@@ -28,7 +28,7 @@ impl PyHankelTransform {
         radial_grid: Option<PyReadonlyArray1<'py, f64>>,
         k_grid: Option<PyReadonlyArray1<'py, f64>>,
         bessel_type: &str,
-    ) -> Self {
+    ) -> PyResult<Self> {
         let ht = match (max_radius, n_points, radial_grid, k_grid) {
             (None, None, Some(radial_grid), None) => {
                 let radial_grid = radial_grid.as_array().to_owned();
@@ -37,11 +37,17 @@ impl PyHankelTransform {
             (Some(max_radius), Some(n_points), None, None) => {
                 HankelTransform::new(order, max_radius, n_points)
             }
+            (None, None, None, Some(k_grid)) => {
+                let k_grid = k_grid.as_array().to_owned();
+                HankelTransform::new_from_k_grid(order, k_grid)
+            }
             _ => {
-                todo!()
+                return Err(PyValueError::new_err(
+                    "Either radial_grid or k_grid or both max_radius and n_points must be supplied",
+                ));
             }
         };
-        PyHankelTransform { inner: ht }
+        Ok(PyHankelTransform { inner: ht })
     }
 
     #[getter]
@@ -55,8 +61,15 @@ impl PyHankelTransform {
     #[getter]
     fn r<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
         let r = self.inner.radius();
-        // Note this copies the data into a new PyArray2
+        // Note this copies the data into a new PyArray1
         r.to_pyarray(py)
+    }
+
+    #[getter]
+    fn v<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
+        let v = self.inner.frequency();
+        // Note this copies the data into a new PyArray1
+        v.to_pyarray(py)
     }
 
     #[getter]
@@ -77,6 +90,34 @@ impl PyHankelTransform {
         let data_view = data.as_array();
         let result = py.detach(|| self.inner.qdht(&data_view, Axis(axis)));
         result.into_pyarray(py)
+    }
+
+    #[pyo3(signature = (data, axis=None))]
+    fn iqdht<'py>(
+        &self,
+        py: Python<'py>,
+        data: PyReadonlyArrayDyn<'py, f64>,
+        axis: Option<usize>,
+    ) -> Bound<'py, PyArrayDyn<f64>> {
+        // Call the underlying pure Rust method
+        let axis = axis.unwrap_or(data.ndim().saturating_sub(2));
+        let data_view = data.as_array();
+        let result = py.detach(|| self.inner.iqdht(&data_view, Axis(axis)));
+        result.into_pyarray(py)
+    }
+
+    #[pyo3(signature = (function, axis=0))]
+    fn to_transform_r<'py>(
+        &self,
+        py: Python<'py>,
+        function: PyReadonlyArrayDyn<'py, f64>,
+        axis: usize,
+    ) -> PyResult<Bound<'py, PyArrayDyn<f64>>> {
+        let fun_view = function.as_array();
+        // let result = py.allow_threads(|| self.inner.to_transform_r_nd(&fun_view, Axis(axis)));
+        let result = self.inner.to_transform_r_nd(&fun_view, Axis(axis));
+        let result = result.map_err(|string| PyValueError::new_err(string.to_owned()))?;
+        Ok(result.into_pyarray(py))
     }
 }
 
