@@ -10,6 +10,12 @@ pub struct PyHankelTransform {
     inner: HankelTransform,
 }
 
+#[pyfunction]
+fn is_release_build() -> bool {
+    // cfg!(debug_assertions) is true in dev mode, false in release mode
+    !cfg!(debug_assertions)
+}
+
 // 2. Expose the methods to Python
 #[pymethods]
 impl PyHankelTransform {
@@ -76,7 +82,7 @@ impl PyHankelTransform {
 
 #[pymodule]
 fn _pyhank_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Register the wrapper class with the module
+    m.add_function(wrap_pyfunction!(is_release_build, m)?)?;
     m.add_class::<PyHankelTransform>()?;
     Ok(())
 }
