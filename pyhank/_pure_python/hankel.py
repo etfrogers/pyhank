@@ -89,12 +89,14 @@ class HankelTransform:
         elif k_grid is not None:
             if max_radius is not None or n_points is not None or radial_grid is not None:
                 raise ValueError(usage)
-            assert k_grid.ndim == 1, "k grid must be a 1d array"
+            if k_grid.ndim != 1:
+                raise TypeError("k grid must be a 1d array")
             n_points = k_grid.size
         elif radial_grid is not None:
             if max_radius is not None or n_points is not None:
                 raise ValueError(usage)
-            assert radial_grid.ndim == 1, "Radial grid must be a 1d array"
+            if radial_grid.ndim != 1:
+                raise TypeError("Radial grid must be a 1d array")
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
         else:

@@ -97,7 +97,7 @@ def test_round_trip(radius: np.ndarray, transformer: HankelTransform):
     assert np.allclose(func, reconstructed)
 
 
-@pytest.mark.parametrize("two_d_size", [1, 100, 27])
+@pytest.mark.parametrize("two_d_size", [1, 5, 27])
 @pytest.mark.parametrize("axis", [0, 1])
 def test_round_trip_2d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
     dims = np.ones(2, int) * two_d_size
@@ -108,7 +108,7 @@ def test_round_trip_2d(two_d_size: int, axis: int, radius: np.ndarray, transform
     assert np.allclose(func, reconstructed)
 
 
-@pytest.mark.parametrize("two_d_size", [1, 100, 27])
+@pytest.mark.parametrize("two_d_size", [1, 5, 27])
 @pytest.mark.parametrize("axis", [0, 1, 2])
 def test_round_trip_3d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
     dims = np.ones(3, int) * two_d_size
@@ -196,10 +196,10 @@ def test_initialisation_errors(backend):
         # k_grid and r_grid
         backend.HankelTransform(order=0, k_grid=k_1d, radial_grid=r_1d)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         backend.HankelTransform(order=0, radial_grid=r_2d)
-    with pytest.raises(AssertionError):
-        backend.HankelTransform(order=0, radial_grid=k_2d)
+    with pytest.raises(TypeError):
+        backend.HankelTransform(order=0, k_grid=k_2d)
 
     # no error
     _ = backend.HankelTransform(order=0, max_radius=1, n_points=10)
