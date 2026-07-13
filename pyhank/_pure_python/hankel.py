@@ -353,6 +353,22 @@ class HankelTransform:
             jv = self.JV
         return jr, jv
 
+    def _approx_equal(self, other: "HankelTransform"):
+        for key, val in self.__dict__.items():
+            if key == "_original_radial_grid":
+                continue
+            val2 = getattr(other, key)
+            if val is None:
+                if val2 is not None:
+                    return False
+            elif isinstance(val, str):
+                if val != val2:
+                    return False
+            else:
+                if not np.allclose(val, val2):
+                    return False
+        return True
+
 
 def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray, axis: int) -> np.ndarray:
     f = interpolate.interp1d(x0, y0, axis=axis, fill_value="extrapolate", kind="cubic")

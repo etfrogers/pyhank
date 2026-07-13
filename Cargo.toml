@@ -8,6 +8,7 @@ edition = "2021"
 pyo3 = "0.29"
 hankrs = { version = "0.1", path = "../hankrs" }
 numpy = "0.29"
+approx = "0.5.1"
 
 [lib]
 name = "_pyhank_native"  # private module to be nested into Python package,

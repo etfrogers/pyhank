@@ -185,6 +185,7 @@ dependencies = [
  "rand 0.9.5",
  "rayon",
  "rstest_reuse",
+ "thiserror",
 ]
 
 [[package]]
@@ -446,6 +447,7 @@ dependencies = [
 name = "pyhank-rust"
 version = "0.1.0"
 dependencies = [
+ "approx",
  "hankrs",
  "numpy",
  "pyo3",
