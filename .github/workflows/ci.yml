@@ -82,6 +82,26 @@ jobs:
           python -m build
           pytest
 
+  test-no-rust:
+    runs-on: ubuntu-latest
+    name: "Test fallback without Rust"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Uninstall Rust
+        run: rustup self uninstall -y
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+          pip install -e .[dev]
+      - name: Test with pytest
+        run: |
+          pytest
+
   build-docs:
     runs-on: ubuntu-latest
     name: "Build Documentation"
@@ -110,7 +130,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [test, test-legacy, build-docs]
+    needs: [test, test-legacy, test-no-rust, build-docs]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     name: "Deploy to PyPI"
     permissions: # IMPORTANT: this permission is mandatory for Trusted Publishing
