@@ -9,7 +9,7 @@ line-length=119
 # This section enables setuptools_scm
 
 [tool.setuptools]
-packages = ["pyhank"]
+packages = ["pyhank", "pyhank._pure_python"]
 
 [tool.setuptools.package-data]
 "pyhank" = ["matlab/*.m", "matlab/License.txt"]
@@ -22,6 +22,7 @@ packages = ["pyhank"]
 # Private Rust extension module to be nested into the Python package
 target = "pyhank._pyhank_native"  # The last part of the name (e.g. "_lib") has to match lib.name in Cargo.toml,
                              # but you can add a prefix to nest it inside of a Python package.
+debug = false                # Force release build even for editable installs
 path = "Cargo.toml"      # Default value, can be omitted
 binding = "PyO3"         # Default value, can be omitted
 

@@ -21,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout hankrs
+        run: git clone https://github.com/etfrogers/hankrs.git ../hankrs
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
@@ -32,11 +34,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build
-          pip install .[dev]
+          pip install -e .[dev]
       - name: Build and install
         run: |
           python -m build
@@ -59,16 +63,20 @@ jobs:
     name: "Oldest Dependencies on Python 3.10"
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout hankrs
+        run: git clone https://github.com/etfrogers/hankrs.git ../hankrs
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build
           pip install -r requirements-legacy.txt
-          pip install . --no-deps
+          pip install -e . --no-deps
       - name: Test and build
         run: |
           python -m build
@@ -79,14 +87,18 @@ jobs:
     name: "Build Documentation"
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout hankrs
+        run: git clone https://github.com/etfrogers/hankrs.git ../hankrs
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .[docs]
+          pip install -e .[docs]
       - name: Build docs
         run: |
           sphinx-build ./docs/ ./docs/build/
@@ -105,10 +117,14 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout hankrs
+        run: git clone https://github.com/etfrogers/hankrs.git ../hankrs
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
