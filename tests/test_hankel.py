@@ -456,14 +456,55 @@ def test_spherical(backend):
     laplacian = transformer.iqdht(laplacian)
     laplacian = transformer.to_original_r(laplacian)
 
-    assert np.allclose(analytical_laplacian, laplacian, rtol=00.1, atol=0.001)
+    assert np.allclose(analytical_laplacian, laplacian, rtol=0.1, atol=0.001)
 
 
-def test_Jn_spherical_zeros():
-    n = 0
-    # zeros are n*pi for n = 0
-    zs = _Jn_spherical_zeros(n, 10)
-    assert np.allclose(zs, np.pi * np.arange(1, 11))
+def test_round_trip_spherical(backend, radius: np.ndarray):
+    transformer = backend.HankelTransform(order=0, radial_grid=radius, bessel_type="spherical")
+    func = np.random.random(radius.shape)
+    ht = transformer.qdht(func)
+    reconstructed = transformer.iqdht(ht)
+
+    assert np.allclose(func, reconstructed, rtol=0.001)
+
+
+@pytest.mark.parametrize("a", [0.5, 1, 2])
+def test_spherical_gaussian(backend, a):
+    r_max = 20
+    n_points = 250
+    transformer = backend.HankelTransform(order=0, max_radius=r_max, n_points=n_points, bessel_type="spherical")
+    function = np.exp(-a * transformer.r**2)
+
+    kr = transformer.kr
+    expected_transform = (np.sqrt(np.pi) / (4 * a ** (3 / 2))) * np.exp(-(kr**2) / (4 * a))
+    actual_transform = transformer.qdht(function)
+
+    assert np.allclose(actual_transform, expected_transform, rtol=0.1, atol=0.001)
+
+
+@pytest.mark.parametrize("a", [0.5, 1, 2])
+def test_top_hat_spherical(backend, a):
+    r_max = 20
+    n_points = 1000
+    transformer = backend.HankelTransform(order=0, max_radius=r_max, n_points=n_points, bessel_type="spherical")
+    function = (transformer.r < a).astype(float)
+    actual_a_index = np.where(function > 0.5)[0][-1]
+    actual_a = transformer.r[actual_a_index]
+
+    kr = transformer.kr
+    a = actual_a
+    expected_transform = (np.sin(kr * a) - kr * a * np.cos(kr * a)) / kr**3
+    actual_transform = transformer.qdht(function)
+
+    assert np.allclose(actual_transform, expected_transform, rtol=0.1, atol=0.05)
+
+
+@pytest.mark.parametrize("n", [0, 1, 2, 3, 4, 5])
+def test_Jn_spherical_zeros(backend, n):
+    if n == 0:
+        # zeros are n*pi for n = 0
+        zs = _Jn_spherical_zeros(n, 10)
+        assert np.allclose(zs, np.pi * np.arange(1, 11))
 
     # https://www.researchgate.net/figure/Zeros-of-the-spherical-Bessel-functions_tbl1_348819348
     # n, j0​(x),   j1​(x),   j2​(x),   j3​(x),   j4​(x)
@@ -494,5 +535,7 @@ def test_Jn_spherical_zeros():
 
 def test_spherical_error_message():
     r = np.linspace(0, 10, 100)
-    with pytest.raises(ValueError, match="Available types of Bessel functions are `polar` and `spherical`"):
+    with pytest.raises(
+        ValueError, match="Invalid transform type: 'bad_bessel_type'. Expected 'polar' or 'spherical'."
+    ):
         _ = HankelTransform(order=0, radial_grid=r, bessel_type="bad_bessel_type")

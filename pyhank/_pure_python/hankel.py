@@ -138,15 +138,16 @@ class HankelTransform:
             jp = scipy_bessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
             jp1 = np.abs(scipy_bessel.jv(order + 1, self.alpha))
             self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S)
+            self.JR = jp1 / self.max_radius
+            self.JV = jp1 / self.v_max
         elif bessel_type == "spherical":
             jp = scipy_bessel.spherical_jn(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
             jp1 = np.abs(scipy_bessel.spherical_jn(order + 1, self.alpha))
-            self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S) / np.sqrt(2 * len(self.r))
+            self.T = np.sqrt(2 * np.pi / self.S**3) * jp / (jp1[:, np.newaxis] @ jp1[np.newaxis, :])
+            self.JR = jp1 / self.max_radius
+            self.JV = jp1 * (self.max_radius**2) * np.sqrt(np.pi / (2 * self.S**3))
         else:
             raise ValueError(usage)  # pragma: no cover - backup case: cannot currently be reached
-
-        self.JR = jp1 / self.max_radius
-        self.JV = jp1 / self.v_max
 
     @property
     def order(self) -> int:
