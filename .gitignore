@@ -14,3 +14,4 @@ pyhank.egg-info/
 venv/
 target/
 *.so
+docs/sg_execution_times.rst
