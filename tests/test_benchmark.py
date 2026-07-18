@@ -1,10 +1,16 @@
 import numpy as np
 import pytest
-from pyhank._pyhank_native import is_release_build  # type: ignore
 
-from pyhank import _pure_python, _pyhank_native  # type: ignore
+from pyhank import _pure_python
 
 from .test_hankel import generalised_jinc
+
+_pyhank_native = pytest.importorskip(
+    "pyhank._pyhank_native",
+    reason="Rust extension not built — benchmark tests require native backend",
+)
+
+from _pyhank_native import is_release_build  # type: ignore # noqa: E402
 
 
 # Test a tiny array (shows Python/Rust boundary overhead)
