@@ -2,12 +2,7 @@ import numpy as np
 import pytest
 import scipy.special as scipy_bessel
 
-from tests.test_hankel import BACKENDS, generalised_jinc, generalised_top_hat, orders
-
-
-@pytest.fixture(params=BACKENDS)
-def backend(request):
-    return request.param
+from tests.test_hankel import generalised_jinc, generalised_top_hat, orders
 
 
 @pytest.mark.parametrize("a", [1, 0.7, 0.1])

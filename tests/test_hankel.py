@@ -4,21 +4,8 @@ import numpy as np
 import pytest
 import scipy.special as scipy_bessel
 
-# Always import the pure Python version
-from pyhank import HankelTransform, _pure_python
+from pyhank import HankelTransform  # imported for type checking only
 from pyhank._pure_python.hankel import _Jn_spherical_zeros
-
-# Build our list of backends to test
-BACKENDS = [pytest.param(_pure_python, id="pure_python")]
-
-# Try to import the Rust extension and add it to the test matrix if available
-try:
-    from pyhank import _pyhank_native  # type: ignore
-
-    BACKENDS.append(pytest.param(_pyhank_native, id="rust_native"))
-except ImportError:
-    # Optional: You can emit a warning or just silently skip
-    pass
 
 smooth_shapes = [lambda r: np.exp(-(r**2)), lambda r: r, lambda r: r**2, lambda r: 1 / np.sqrt(r**2 + 0.1**2)]
 
@@ -47,11 +34,6 @@ def generalised_jinc(v: np.ndarray, a: float, p: int):
     return val
 
 
-@pytest.fixture(params=BACKENDS)
-def backend(request):
-    return request.param
-
-
 @pytest.fixture(params=orders)
 def transformer(request, radius, backend) -> HankelTransform:
     order = request.param
@@ -74,8 +56,8 @@ def test_parsevals_theorem(shape: Callable, radius: np.ndarray, transformer: Han
 
 
 @pytest.mark.parametrize("shape", [generalised_jinc, generalised_top_hat])
-def test_energy_conservation(shape: Callable, transformer: HankelTransform):
-    transformer = HankelTransform(transformer.order, 10, transformer.n_points)
+def test_energy_conservation(backend, shape: Callable, transformer: HankelTransform):
+    transformer = backend.HankelTransform(transformer.order, 10, transformer.n_points)
     func = shape(transformer.r, 0.5, transformer.order)
     intensity_before = np.abs(func) ** 2
     energy_before = np.trapezoid(y=intensity_before * 2 * np.pi * transformer.r, x=transformer.r)
@@ -523,14 +505,14 @@ def test_Jn_spherical_zeros(backend, n):
             [15.7080, 17.2208, 18.6890, 20.1218, 21.5254],
         ]
     )
-    for n in range(5):
-        zs = _Jn_spherical_zeros(n, 5)
-        assert np.allclose(zs, expected_zeros[:, n], atol=1e-5)
+    for ni in range(5):
+        zs = _Jn_spherical_zeros(ni, 5)
+        assert np.allclose(zs, expected_zeros[:, ni], atol=1e-5)
 
     # test that the zeros are actually zeros of the spherical Bessel function
-    for n in range(10):
-        zs = _Jn_spherical_zeros(n, 10)
-        assert np.allclose(scipy_bessel.spherical_jn(n, zs), 0)
+    for ni in range(10):
+        zs = _Jn_spherical_zeros(ni, 10)
+        assert np.allclose(scipy_bessel.spherical_jn(ni, zs), 0)
 
 
 def test_spherical_error_message():
