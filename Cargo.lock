@@ -184,6 +184,7 @@ dependencies = [
  "num-complex",
  "rand 0.9.5",
  "rayon",
+ "roots",
  "rstest_reuse",
  "thiserror",
 ]
@@ -609,6 +610,12 @@ dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
 ]
+
+[[package]]
+name = "roots"
+version = "0.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "082f11ffa03bbef6c2c6ea6bea1acafaade2fd9050ae0234ab44a2153742b058"
 
 [[package]]
 name = "rstest_reuse"

@@ -109,7 +109,7 @@ class HankelTransform:
         self.bessel_type = bessel_type
 
         # Calculate N+1 roots must be calculated before max_radius can be derived from k_grid
-        usage = "Available types of Bessel functions are `polar` and `spherical`"
+        usage = f"Invalid transform type: '{bessel_type}'. Expected 'polar' or 'spherical'."
         alpha = None
         if bessel_type == "polar":
             alpha = scipy_bessel.jn_zeros(self.order, self.n_points + 1)

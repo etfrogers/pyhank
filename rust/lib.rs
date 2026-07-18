@@ -79,31 +79,38 @@ fn default_axis(axis: Option<usize>, data: &PyReadonlyArrayDyn<f64>) -> Axis {
 #[pymethods]
 impl PyHankelTransform {
     #[new]
-    #[pyo3(signature = (order, max_radius=None, n_points=None, radial_grid=None, k_grid=None, bessel_type="polar"))]
+    #[pyo3(signature = (order, max_radius=None, n_points=None, radial_grid=None, k_grid=None, bessel_type=TransformType::Polar))]
     fn new<'py>(
         order: i32,
         max_radius: Option<f64>,
         n_points: Option<usize>,
         radial_grid: Option<PyReadonlyArray1<'py, f64>>,
         k_grid: Option<PyReadonlyArray1<'py, f64>>,
-        bessel_type: &str,
+        bessel_type: TransformType,
     ) -> PyResult<Self> {
-        if bessel_type != "polar" {
-            return Err(PyNotImplementedError::new_err(
-                "Only polar bessel type is implemented",
-            ));
-        }
         let ht = match (max_radius, n_points, radial_grid, k_grid) {
             (None, None, Some(radial_grid), None) => {
                 let radial_grid = radial_grid.as_array().to_owned();
-                HankelTransform::new_from_r_grid(order, radial_grid)
+                if bessel_type == TransformType::Spherical {
+                    HankelTransform::new_spherical_from_r_grid(order, radial_grid)
+                } else {
+                    HankelTransform::new_from_r_grid(order, radial_grid)
+                }
             }
             (Some(max_radius), Some(n_points), None, None) => {
-                HankelTransform::new(order, max_radius, n_points)
+                if bessel_type == TransformType::Spherical {
+                    HankelTransform::new_spherical(order, max_radius, n_points)
+                } else {
+                    HankelTransform::new(order, max_radius, n_points)
+                }
             }
             (None, None, None, Some(k_grid)) => {
                 let k_grid = k_grid.as_array().to_owned();
-                HankelTransform::new_from_k_grid(order, k_grid)
+                if bessel_type == TransformType::Spherical {
+                    HankelTransform::new_spherical_from_k_grid(order, k_grid)
+                } else {
+                    HankelTransform::new_from_k_grid(order, k_grid)
+                }
             }
             _ => {
                 return Err(PyValueError::new_err(
@@ -286,6 +293,30 @@ impl From<PyHankError> for PyErr {
         match err {
             PyHankError::Interp(e) => PyValueError::new_err(e.to_string()),
             // PyHankError::Core(e) => ... map your core errors here ...
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum TransformType {
+    Polar,
+    Spherical,
+}
+
+// Teach PyO3 how to extract this enum from a Python object
+impl<'a, 'py> FromPyObject<'a, 'py> for TransformType {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        let s: &str = ob.extract()?;
+
+        match s.to_lowercase().as_str() {
+            "polar" => Ok(TransformType::Polar),
+            "spherical" => Ok(TransformType::Spherical),
+            // 3. Automatically throw a clean Python ValueError if they misspell it!
+            _ => Err(PyValueError::new_err(format!(
+                "Invalid transform type: '{s}'. Expected 'polar' or 'spherical'.",
+            ))),
         }
     }
 }
