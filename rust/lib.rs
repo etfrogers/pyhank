@@ -1,11 +1,12 @@
 use approx::relative_eq;
 use hankrs::{
     one_shot::{iqdht as rust_iqdht, qdht as rust_qdht},
-    HankelTransform, InterpError,
+    HankelScalar, HankelTransform, InterpError,
 };
+use num::complex::Complex64;
 use numpy::{
-    ndarray::Axis, IntoPyArray, PyArray1, PyArray2, PyArrayDyn, PyArrayMethods, PyReadonlyArray1,
-    PyReadonlyArrayDyn, PyUntypedArrayMethods, ToPyArray,
+    ndarray::Axis, IntoPyArray, PyArray1, PyArray2, PyArrayMethods, PyReadonlyArray1,
+    PyReadonlyArrayDyn, PyUntypedArray, PyUntypedArrayMethods, ToPyArray,
 };
 use pyo3::{
     exceptions::{PyNotImplementedError, PyValueError},
@@ -23,16 +24,46 @@ fn is_release_build() -> bool {
     !cfg!(debug_assertions)
 }
 
+macro_rules! dynamic_dispatch_to {
+    ($fun:ident, $py:ident, $kr:ident, $f:ident, $order:expr, $axis:expr, $bessel_type:expr) => {
+        match $f {
+            PyDataArray::Float(f_array) => {
+                $fun::<f64>($py, $kr, f_array, $order, $axis, $bessel_type)
+            }
+            PyDataArray::Complex(f_array) => {
+                $fun::<Complex64>($py, $kr, f_array, $order, $axis, $bessel_type)
+            }
+        }
+    };
+    ($fun:ident, $py:ident, $transformer:ident, $data:ident, $axis:expr) => {
+        match $data {
+            PyDataArray::Float(f_array) => $fun::<f64>($transformer, $py, f_array, $axis),
+            PyDataArray::Complex(f_array) => $fun::<Complex64>($transformer, $py, f_array, $axis),
+        }
+    };
+}
+
 #[pyfunction]
 #[pyo3(signature = (r, f, order=0, axis=None, bessel_type="polar"))]
 fn qdht<'py>(
     py: Python<'py>,
     r: PyReadonlyArray1<'py, f64>,
-    f: PyReadonlyArrayDyn<'py, f64>,
+    f: PyDataArray<'py>,
     order: i32,
     axis: Option<usize>,
     bessel_type: &str,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArrayDyn<f64>>)> {
+) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
+    dynamic_dispatch_to!(internal_qdht, py, r, f, order, axis, bessel_type)
+}
+
+fn internal_qdht<'py, T: HankelScalarLocal>(
+    py: Python<'py>,
+    r: PyReadonlyArray1<'py, f64>,
+    f: PyReadonlyArrayDyn<'py, T>,
+    order: i32,
+    axis: Option<usize>,
+    bessel_type: &str,
+) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
     if bessel_type != "polar" {
         return Err(PyNotImplementedError::new_err(
             "Only polar bessel type is implemented",
@@ -44,7 +75,7 @@ fn qdht<'py>(
     let result = py.detach(|| rust_qdht(r, &f_view, order, axis));
     let kr = result.0.into_pyarray(py);
     let ht = result.1.into_pyarray(py);
-    Ok((kr, ht))
+    Ok((kr, ht.as_untyped().clone()))
 }
 
 #[pyfunction]
@@ -52,11 +83,26 @@ fn qdht<'py>(
 fn iqdht<'py>(
     py: Python<'py>,
     kr: PyReadonlyArray1<'py, f64>,
-    f: PyReadonlyArrayDyn<'py, f64>,
+    f: PyDataArray<'py>,
     order: i32,
     axis: Option<usize>,
     bessel_type: &str,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArrayDyn<f64>>)> {
+) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
+    dynamic_dispatch_to!(internal_iqdht, py, kr, f, order, axis, bessel_type)
+}
+
+trait HankelScalarLocal: HankelScalar + numpy::Element {}
+impl HankelScalarLocal for f64 {}
+impl HankelScalarLocal for Complex64 {}
+
+fn internal_iqdht<'py, T: HankelScalarLocal + 'py>(
+    py: Python<'py>,
+    kr: PyReadonlyArray1<'py, f64>,
+    f: PyReadonlyArrayDyn<'py, T>,
+    order: i32,
+    axis: Option<usize>,
+    bessel_type: &str,
+) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
     if bessel_type != "polar" {
         return Err(PyNotImplementedError::new_err(
             "Only polar bessel type is implemented",
@@ -68,14 +114,54 @@ fn iqdht<'py>(
     let result = py.detach(|| rust_iqdht(kr, f_view, order, axis));
     let r = result.0.into_pyarray(py);
     let ht = result.1.into_pyarray(py);
-    Ok((r, ht))
+    Ok((r, ht.as_untyped().clone()))
 }
 
-fn default_axis(axis: Option<usize>, data: &PyReadonlyArrayDyn<f64>) -> Axis {
+fn default_axis<T: HankelScalarLocal>(axis: Option<usize>, data: &PyReadonlyArrayDyn<T>) -> Axis {
     Axis(axis.unwrap_or(data.ndim().saturating_sub(2)))
 }
 
-// 2. Expose the methods to Python
+fn transformer_qdht<'py, T: HankelScalarLocal>(
+    transformer: &HankelTransform,
+    py: Python<'py>,
+    data: PyReadonlyArrayDyn<'py, T>,
+    axis: Option<usize>,
+) -> Bound<'py, PyUntypedArray> {
+    let axis = default_axis(axis, &data);
+    let data_view = data.as_array();
+    let result = py.detach(|| transformer.qdht(&data_view, axis));
+    result.into_pyarray(py).as_untyped().clone()
+}
+
+fn transformer_iqdht<'py, T: HankelScalarLocal>(
+    transformer: &HankelTransform,
+    py: Python<'py>,
+    data: PyReadonlyArrayDyn<'py, T>,
+    axis: Option<usize>,
+) -> Bound<'py, PyUntypedArray> {
+    let axis = axis.unwrap_or(data.ndim().saturating_sub(2));
+    let data_view = data.as_array();
+    let result = py.detach(|| transformer.iqdht(&data_view, Axis(axis)));
+    result.into_pyarray(py).as_untyped().clone()
+}
+
+macro_rules! generic_interpolator {
+    ($fun:path, $py:ident, $transformer:expr, $data:ident, $axis:ident) => {
+        match $data {
+            PyDataArray::Float($data) => {
+                let data_view = $data.as_array();
+                let result = $py.detach(|| $fun(&$transformer, &data_view, Axis($axis)));
+                Ok(result?.into_pyarray($py).as_untyped().clone())
+            }
+            PyDataArray::Complex($data) => {
+                let data_view = $data.as_array();
+                let result = $py.detach(|| $fun(&$transformer, &data_view, Axis($axis)));
+                Ok(result?.into_pyarray($py).as_untyped().clone())
+            }
+        }
+    };
+}
+
 #[pymethods]
 impl PyHankelTransform {
     #[new]
@@ -192,76 +278,86 @@ impl PyHankelTransform {
     fn qdht<'py>(
         &self,
         py: Python<'py>,
-        data: PyReadonlyArrayDyn<'py, f64>,
+        data: PyDataArray<'py>,
         axis: Option<usize>,
-    ) -> Bound<'py, PyArrayDyn<f64>> {
-        // Call the underlying pure Rust method
-        let axis = default_axis(axis, &data);
-        let data_view = data.as_array();
-        let result = py.detach(|| self.inner.qdht(&data_view, axis));
-        result.into_pyarray(py)
+    ) -> Bound<'py, PyUntypedArray> {
+        let transformer = &self.inner;
+        dynamic_dispatch_to!(transformer_qdht, py, transformer, data, axis)
     }
 
     #[pyo3(signature = (data, axis=None))]
     fn iqdht<'py>(
         &self,
         py: Python<'py>,
-        data: PyReadonlyArrayDyn<'py, f64>,
+        data: PyDataArray<'py>,
         axis: Option<usize>,
-    ) -> Bound<'py, PyArrayDyn<f64>> {
-        // Call the underlying pure Rust method
-        let axis = axis.unwrap_or(data.ndim().saturating_sub(2));
-        let data_view = data.as_array();
-        let result = py.detach(|| self.inner.iqdht(&data_view, Axis(axis)));
-        result.into_pyarray(py)
+    ) -> Bound<'py, PyUntypedArray> {
+        let transformer = &self.inner;
+        dynamic_dispatch_to!(transformer_iqdht, py, transformer, data, axis)
     }
 
     #[pyo3(signature = (function, axis=0))]
     fn to_transform_r<'py>(
         &self,
         py: Python<'py>,
-        function: PyReadonlyArrayDyn<'py, f64>,
+        function: PyDataArray<'py>,
         axis: usize,
-    ) -> Result<Bound<'py, PyArrayDyn<f64>>, PyHankError> {
-        let fun_view = function.as_array();
-        let result = py.detach(|| self.inner.to_transform_r_nd(&fun_view, Axis(axis)));
-        Ok(result?.into_pyarray(py))
+    ) -> Result<Bound<'py, PyUntypedArray>, PyHankError> {
+        generic_interpolator!(
+            HankelTransform::to_transform_r_nd,
+            py,
+            &self.inner,
+            function,
+            axis
+        )
     }
 
     #[pyo3(signature = (function, axis=0))]
     fn to_original_r<'py>(
         &self,
         py: Python<'py>,
-        function: PyReadonlyArrayDyn<'py, f64>,
+        function: PyDataArray<'py>,
         axis: usize,
-    ) -> Result<Bound<'py, PyArrayDyn<f64>>, PyHankError> {
-        let fun_view = function.as_array();
-        let result = py.detach(|| self.inner.to_original_r_nd(&fun_view, Axis(axis)));
-        Ok(result?.into_pyarray(py))
+    ) -> Result<Bound<'py, PyUntypedArray>, PyHankError> {
+        generic_interpolator!(
+            HankelTransform::to_original_r_nd,
+            py,
+            &self.inner,
+            function,
+            axis
+        )
     }
 
     #[pyo3(signature = (function, axis=0))]
     fn to_transform_k<'py>(
         &self,
         py: Python<'py>,
-        function: PyReadonlyArrayDyn<'py, f64>,
+        function: PyDataArray<'py>,
         axis: usize,
-    ) -> Result<Bound<'py, PyArrayDyn<f64>>, PyHankError> {
-        let fun_view = function.as_array();
-        let result = py.detach(|| self.inner.to_transform_k_nd(&fun_view, Axis(axis)));
-        Ok(result?.into_pyarray(py))
+    ) -> Result<Bound<'py, PyUntypedArray>, PyHankError> {
+        generic_interpolator!(
+            HankelTransform::to_transform_k_nd,
+            py,
+            &self.inner,
+            function,
+            axis
+        )
     }
 
     #[pyo3(signature = (function, axis=0))]
     fn to_original_k<'py>(
         &self,
         py: Python<'py>,
-        function: PyReadonlyArrayDyn<'py, f64>,
+        function: PyDataArray<'py>,
         axis: usize,
-    ) -> Result<Bound<'py, PyArrayDyn<f64>>, PyHankError> {
-        let fun_view = function.as_array();
-        let result = py.detach(|| self.inner.to_original_k_nd(&fun_view, Axis(axis)));
-        Ok(result?.into_pyarray(py))
+    ) -> Result<Bound<'py, PyUntypedArray>, PyHankError> {
+        generic_interpolator!(
+            HankelTransform::to_original_k_nd,
+            py,
+            &self.inner,
+            function,
+            axis
+        )
     }
 
     fn _approx_equal(&self, other: &Self) -> bool {
@@ -295,6 +391,12 @@ impl From<PyHankError> for PyErr {
             // PyHankError::Core(e) => ... map your core errors here ...
         }
     }
+}
+
+#[derive(FromPyObject)]
+pub enum PyDataArray<'py> {
+    Float(PyReadonlyArrayDyn<'py, f64>),
+    Complex(PyReadonlyArrayDyn<'py, Complex64>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
