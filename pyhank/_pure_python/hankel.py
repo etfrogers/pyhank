@@ -71,6 +71,8 @@ class HankelTransform:
     the roots of the bessel function.
     """
 
+    __module__ = "pyhank"
+
     def __init__(
         self,
         order: int,

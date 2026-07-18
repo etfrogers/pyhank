@@ -20,5 +20,6 @@ See :ref:`sphx_glr_auto_examples_usage_example.py`
 for an example demonstrating this and :ref:`sphx_glr_auto_examples_speed_usage_example.py`
 for an example of the difference in speed.
 
-.. automodule:: pyhank.one_shot
-    :members:
+.. autofunction:: pyhank.qdht
+
+.. autofunction:: pyhank.iqdht

@@ -16,6 +16,12 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
+# Force autodoc to use the pure-Python backend so it can read the docstrings.
+# The native Rust extension (_pyhank_native) has no Python docstrings, so we
+# block it here; pyhank/__init__.py will then fall through to _pure_python.
+# Setting a sys.modules entry to None causes "import X" to raise ImportError.
+sys.modules["pyhank._pyhank_native"] = None  # type: ignore[assignment]
+
 # -- Project information -----------------------------------------------------
 
 project = "PyHank"

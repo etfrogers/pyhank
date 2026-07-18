@@ -2,5 +2,5 @@
 Hankel transform class
 ======================
 
-.. automodule:: pyhank.hankel
+.. autoclass:: pyhank.HankelTransform
     :members:

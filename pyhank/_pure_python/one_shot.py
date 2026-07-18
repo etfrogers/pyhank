@@ -35,6 +35,8 @@ def qdht(
     return transformer.kr, ht
 
 
+qdht.__module__ = "pyhank"
+
 def iqdht(
     k: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2, bessel_type: str = "polar"
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -65,3 +67,6 @@ def iqdht(
     f_transform = transformer.to_transform_k(f, axis=axis)
     ht = transformer.iqdht(f_transform, axis=axis)
     return transformer.r, ht
+
+
+iqdht.__module__ = "pyhank"
