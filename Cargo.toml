@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 pyo3 = "0.29"
-hankrs = { version = "0.1", path = "../hankrs" }
+hankrs = { version = "0.2", path = "../hankrs" }
 numpy = "0.29"
 approx = "0.5.1"
 num = "0.4.3"
