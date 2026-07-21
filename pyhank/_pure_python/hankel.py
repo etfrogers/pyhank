@@ -357,6 +357,22 @@ class HankelTransform:
         return jr, jv
 
     def _approx_equal(self, other: "HankelTransform"):
+        if not hasattr(other, "__dict__"):
+            # Assume it's a native transformer (or similar object), compare public properties
+            for attr in ["order", "n_points", "r", "v", "kr", "T"]:
+                try:
+                    val1 = getattr(self, attr)
+                    val2 = getattr(other, attr)
+                except AttributeError:
+                    return False
+                if isinstance(val1, (int, float, str)):
+                    if val1 != val2:
+                        return False
+                else:
+                    if not np.allclose(val1, val2):
+                        return False
+            return True
+
         for key, val in self.__dict__.items():
             if key == "_original_radial_grid":
                 continue

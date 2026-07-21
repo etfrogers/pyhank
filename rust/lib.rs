@@ -360,8 +360,13 @@ impl PyHankelTransform {
         )
     }
 
-    fn _approx_equal(&self, other: &Self) -> bool {
-        relative_eq!(self.inner, other.inner)
+    fn _approx_equal(slf: &Bound<'_, Self>, other: &Bound<'_, PyAny>) -> PyResult<bool> {
+        if let Ok(other_native) = other.extract::<pyo3::PyRef<Self>>() {
+            Ok(relative_eq!(slf.borrow().inner, other_native.inner))
+        } else {
+            let res = other.call_method1("_approx_equal", (slf,))?;
+            res.extract()
+        }
     }
 }
 

@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 import scipy.special as scipy_bessel
 
+import pyhank._pure_python as pure_python
 from pyhank import HankelTransform  # imported for type checking only
 from pyhank._pure_python.hankel import _Jn_spherical_zeros
 
@@ -521,3 +522,43 @@ def test_spherical_error_message():
         ValueError, match="Invalid transform type: 'bad_bessel_type'. Expected 'polar' or 'spherical'."
     ):
         _ = HankelTransform(order=0, radial_grid=r, bessel_type="bad_bessel_type")
+
+
+def test_approx_equal_failures():
+    base = pure_python.HankelTransform(0, max_radius=1.0, n_points=32)
+
+    # 1. Missing attribute (except AttributeError branch)
+    class MissingAttr:
+        order = 0
+        n_points = 32
+        max_radius = 1.0
+
+    assert not base._approx_equal(MissingAttr())  # pyright: ignore[reportArgumentType]
+
+    # 2. Integer difference (isinstance(val, int) != branch: order, n_points)
+    diff_order = pure_python.HankelTransform(1, max_radius=1.0, n_points=32)
+    assert not base._approx_equal(diff_order)
+
+    diff_n = pure_python.HankelTransform(0, max_radius=1.0, n_points=64)
+    assert not base._approx_equal(diff_n)
+
+    # 3. String difference (isinstance(val, str) != branch: bessel_type)
+    diff_bessel = pure_python.HankelTransform(0, max_radius=1.0, n_points=32, bessel_type="spherical")
+    assert not base._approx_equal(diff_bessel)
+
+    # 4. Float difference (isinstance(val, float) not np.isclose branch: max_radius)
+    diff_radius = pure_python.HankelTransform(0, max_radius=2.0, n_points=32)
+    assert not base._approx_equal(diff_radius)
+
+    # 5. Array difference (not np.allclose branch: r, v, kr, T)
+    class DifferentArray:
+        order = 0
+        n_points = 32
+        max_radius = 1.0
+        bessel_type = "polar"
+        r = base.r + 1.0
+        v = base.v
+        kr = base.kr
+        T = base.T
+
+    assert not base._approx_equal(DifferentArray())  # pyright: ignore[reportArgumentType]
