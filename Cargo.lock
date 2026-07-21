@@ -155,7 +155,9 @@ dependencies = [
 
 [[package]]
 name = "hankrs"
-version = "0.2.0"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15966fd577f3ae5da6a4a82972178f5a8f0c73619a865d70ae87ded9dc72fa13"
 dependencies = [
  "amos-bessel-rs",
  "approx",
