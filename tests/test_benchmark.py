@@ -10,8 +10,6 @@ _pyhank_native = pytest.importorskip(
     reason="Rust extension not built — benchmark tests require native backend",
 )
 
-from _pyhank_native import is_release_build  # type: ignore # noqa: E402
-
 
 # Test a tiny array (shows Python/Rust boundary overhead)
 # Test a large array (shows pure math performance)
@@ -19,7 +17,7 @@ from _pyhank_native import is_release_build  # type: ignore # noqa: E402
 @pytest.mark.parametrize("backend", [pytest.param(_pure_python, id="python"), pytest.param(_pyhank_native, id="rust")])
 def test_complete_performance(benchmark, size, backend):
 
-    assert is_release_build()
+    assert _pyhank_native.is_release_build()
 
     def process(size):
         transformer = backend.HankelTransform(order=1, radial_grid=np.linspace(0, 3, size))
@@ -36,7 +34,7 @@ def test_complete_performance(benchmark, size, backend):
 @pytest.mark.parametrize("backend", [pytest.param(_pure_python, id="python"), pytest.param(_pyhank_native, id="rust")])
 def test_qdht_performance(benchmark, size, backend):
 
-    assert is_release_build()
+    assert _pyhank_native.is_release_build()
     transformer = backend.HankelTransform(order=1, radial_grid=np.linspace(0, 3, size))
     f = generalised_jinc(transformer.r, 1.0, transformer.order)
 
@@ -53,7 +51,7 @@ def test_qdht_performance(benchmark, size, backend):
 @pytest.mark.parametrize("backend", [pytest.param(_pure_python, id="python"), pytest.param(_pyhank_native, id="rust")])
 def test_creation_performance(benchmark, size, backend):
 
-    assert is_release_build()
+    assert _pyhank_native.is_release_build()
 
     def process(size):
         return backend.HankelTransform(order=1, radial_grid=np.linspace(0, 3, size))
