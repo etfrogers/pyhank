@@ -19,13 +19,12 @@ the vectorisation of the :func:`.HankelTransforms.iqdht` (and
 import matplotlib.pyplot as plt
 import numpy as np
 
-# %%
-# Then the functions from this package
-from pyhank import HankelTransform
-
 # noinspection PyUnresolvedReferences
 from helper import gauss1d, imagesc
 
+# %%
+# Then the functions from this package
+from pyhank import HankelTransform
 
 # %%
 # Initialise radius grid

@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 import pytest
@@ -7,22 +7,18 @@ import scipy.special as scipy_bessel
 from pyhank import HankelTransform
 from pyhank.hankel import _Jn_spherical_zeros
 
-
-smooth_shapes = [lambda r: np.exp(-r ** 2),
-                 lambda r: r,
-                 lambda r: r ** 2,
-                 lambda r: 1 / np.sqrt(r**2 + 0.1**2)]
+smooth_shapes = [lambda r: np.exp(-(r**2)), lambda r: r, lambda r: r**2, lambda r: 1 / np.sqrt(r**2 + 0.1**2)]
 
 all_shapes = smooth_shapes.copy()
 all_shapes.append(lambda r: np.random.random(r.size))
 
-orders = list(range(0, 5))
+orders = list(range(5))
 
 
 def generalised_top_hat(r: np.ndarray, a: float, p: int) -> np.ndarray:
     top_hat = np.zeros_like(r)
     top_hat[r <= a] = 1
-    return r ** p * top_hat
+    return r**p * top_hat
 
 
 def generalised_jinc(v: np.ndarray, a: float, p: int):
@@ -32,7 +28,7 @@ def generalised_jinc(v: np.ndarray, a: float, p: int):
     elif p == -2:
         val[v == 0] = -np.pi
     elif p == 0:
-        val[v == 0] = np.pi * a ** 2
+        val[v == 0] = np.pi * a**2
     else:
         val[v == 0] = 0
     return val
@@ -44,36 +40,31 @@ def transformer(request, radius) -> HankelTransform:
     return HankelTransform(order, radial_grid=radius)
 
 
-@pytest.mark.parametrize('shape', all_shapes)
-def test_parsevals_theorem(shape: Callable,
-                           radius: np.ndarray,
-                           transformer: HankelTransform):
+@pytest.mark.parametrize("shape", all_shapes)
+def test_parsevals_theorem(shape: Callable, radius: np.ndarray, transformer: HankelTransform):
     # As per equation 11 of Guizar-Sicairos, the UNSCALED transform is unitary,
     # i.e. if we pass in the unscaled fr (=Fr), the unscaled fv (=Fv)should have the
     # same sum of abs val^2. Here the unscale transform is simply given by
     # ht = transformer.T @ func
     func = shape(radius)
-    intensity_before = np.abs(func)**2
+    intensity_before = np.abs(func) ** 2
     energy_before = np.sum(intensity_before)
     ht = transformer.T @ func
-    intensity_after = np.abs(ht)**2
+    intensity_after = np.abs(ht) ** 2
     energy_after = np.sum(intensity_after)
     assert np.isclose(energy_before, energy_after)
 
 
-@pytest.mark.parametrize('shape', [generalised_jinc, generalised_top_hat])
-def test_energy_conservation(shape: Callable,
-                             transformer: HankelTransform):
+@pytest.mark.parametrize("shape", [generalised_jinc, generalised_top_hat])
+def test_energy_conservation(shape: Callable, transformer: HankelTransform):
     transformer = HankelTransform(transformer.order, 10, transformer.n_points)
     func = shape(transformer.r, 0.5, transformer.order)
-    intensity_before = np.abs(func)**2
-    energy_before = np.trapezoid(y=intensity_before * 2 * np.pi * transformer.r,
-                                 x=transformer.r)
+    intensity_before = np.abs(func) ** 2
+    energy_before = np.trapezoid(y=intensity_before * 2 * np.pi * transformer.r, x=transformer.r)
 
     ht = transformer.qdht(func)
-    intensity_after = np.abs(ht)**2
-    energy_after = np.trapezoid(y=intensity_after * 2 * np.pi * transformer.v,
-                                x=transformer.v)
+    intensity_after = np.abs(ht) ** 2
+    energy_after = np.trapezoid(y=intensity_after * 2 * np.pi * transformer.v, x=transformer.v)
     assert np.isclose(energy_before, energy_after, rtol=0.01)
 
 
@@ -84,8 +75,8 @@ def test_round_trip(radius: np.ndarray, transformer: HankelTransform):
     assert np.allclose(func, reconstructed)
 
 
-@pytest.mark.parametrize('two_d_size', [1, 100, 27])
-@pytest.mark.parametrize('axis', [0, 1])
+@pytest.mark.parametrize("two_d_size", [1, 100, 27])
+@pytest.mark.parametrize("axis", [0, 1])
 def test_round_trip_2d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
     dims = np.ones(2, int) * two_d_size
     dims[axis] = radius.size
@@ -95,8 +86,8 @@ def test_round_trip_2d(two_d_size: int, axis: int, radius: np.ndarray, transform
     assert np.allclose(func, reconstructed)
 
 
-@pytest.mark.parametrize('two_d_size', [1, 100, 27])
-@pytest.mark.parametrize('axis', [0, 1, 2])
+@pytest.mark.parametrize("two_d_size", [1, 100, 27])
+@pytest.mark.parametrize("axis", [0, 1, 2])
 def test_round_trip_3d(two_d_size: int, axis: int, radius: np.ndarray, transformer: HankelTransform):
     dims = np.ones(3, int) * two_d_size
     dims[axis] = radius.size
@@ -106,10 +97,8 @@ def test_round_trip_3d(two_d_size: int, axis: int, radius: np.ndarray, transform
     assert np.allclose(func, reconstructed)
 
 
-@pytest.mark.parametrize('shape', smooth_shapes)
-def test_round_trip_with_interpolation(shape: Callable,
-                                       radius: np.ndarray,
-                                       transformer: HankelTransform):
+@pytest.mark.parametrize("shape", smooth_shapes)
+def test_round_trip_with_interpolation(shape: Callable, radius: np.ndarray, transformer: HankelTransform):
     # the function must be smoothish for interpolation
     # to work. Random every point doesn't work
     func = shape(radius)
@@ -121,11 +110,11 @@ def test_round_trip_with_interpolation(shape: Callable,
     assert np.allclose(func, reconstructed, rtol=2e-4)
 
 
-@pytest.mark.parametrize('a', [1, 0.7, 0.1, 136., 1e-6])
-@pytest.mark.parametrize('p', range(-10, 9))
+@pytest.mark.parametrize("a", [1, 0.7, 0.1, 136.0, 1e-6])
+@pytest.mark.parametrize("p", range(-10, 9))
 def test_generalised_jinc_zero(a: float, p: int):
     if p == -1:
-        pytest.skip('Skipping test for p=-11 as 1/eps does not go to inf correctly')
+        pytest.skip("Skipping test for p=-11 as 1/eps does not go to inf correctly")
     v = np.array([0, 1e-200])
     val = generalised_jinc(v, a, p)
     assert np.isclose(val[0], val[1])
@@ -195,15 +184,15 @@ def test_initialisation_errors():
     _ = HankelTransform(order=0, k_grid=k_1d)
 
 
-@pytest.mark.parametrize('n', [10, 100, 512, 1024])
-@pytest.mark.parametrize('max_radius', [0.1, 10, 20, 1e6])
+@pytest.mark.parametrize("n", [10, 100, 512, 1024])
+@pytest.mark.parametrize("max_radius", [0.1, 10, 20, 1e6])
 def test_r_creation_equivalence(n: int, max_radius: float):
     transformer1 = HankelTransform(order=0, n_points=n, max_radius=max_radius)
     r = np.linspace(0, max_radius, n)
     transformer2 = HankelTransform(order=0, radial_grid=r)
 
     for key, val in transformer1.__dict__.items():
-        if key == '_original_radial_grid':
+        if key == "_original_radial_grid":
             continue
         val2 = getattr(transformer2, key)
         if val is None:
@@ -214,8 +203,8 @@ def test_r_creation_equivalence(n: int, max_radius: float):
             assert np.allclose(val, val2)
 
 
-@pytest.mark.parametrize('shape', smooth_shapes)
-@pytest.mark.parametrize('order', orders)
+@pytest.mark.parametrize("shape", smooth_shapes)
+@pytest.mark.parametrize("order", orders)
 def test_round_trip_r_interpolation(radius: np.ndarray, order: int, shape: Callable):
     transformer = HankelTransform(order=order, radial_grid=radius)
 
@@ -227,10 +216,10 @@ def test_round_trip_r_interpolation(radius: np.ndarray, order: int, shape: Calla
     assert np.allclose(func, reconstructed_func, rtol=1e-4)
 
 
-@pytest.mark.parametrize('shape', smooth_shapes)
-@pytest.mark.parametrize('order', orders)
+@pytest.mark.parametrize("shape", smooth_shapes)
+@pytest.mark.parametrize("order", orders)
 def test_round_trip_k_interpolation(radius: np.ndarray, order: int, shape: Callable):
-    k_grid = radius/10
+    k_grid = radius / 10
     transformer = HankelTransform(order=order, k_grid=k_grid)
 
     # the function must be smoothish for interpolation
@@ -241,16 +230,16 @@ def test_round_trip_k_interpolation(radius: np.ndarray, order: int, shape: Calla
     assert np.allclose(func, reconstructed_func, rtol=1e-4)
 
 
-@pytest.mark.parametrize('shape', smooth_shapes)
-@pytest.mark.parametrize('order', orders)
-@pytest.mark.parametrize('axis', [0, 1])
+@pytest.mark.parametrize("shape", smooth_shapes)
+@pytest.mark.parametrize("order", orders)
+@pytest.mark.parametrize("axis", [0, 1])
 def test_round_trip_r_interpolation_2d(radius: np.ndarray, order: int, shape: Callable, axis: int):
     transformer = HankelTransform(order=order, radial_grid=radius)
 
     # the function must be smoothish for interpolation
     # to work. Random every point doesn't work
     dims_amplitude = np.ones(2, int)
-    dims_amplitude[1-axis] = 10
+    dims_amplitude[1 - axis] = 10
     amplitude = np.random.random(dims_amplitude)
     dims_radius = np.ones(2, int)
     dims_radius[axis] = len(radius)
@@ -260,17 +249,17 @@ def test_round_trip_r_interpolation_2d(radius: np.ndarray, order: int, shape: Ca
     assert np.allclose(func, reconstructed_func, rtol=1e-4)
 
 
-@pytest.mark.parametrize('shape', smooth_shapes)
-@pytest.mark.parametrize('order', orders)
-@pytest.mark.parametrize('axis', [0, 1])
+@pytest.mark.parametrize("shape", smooth_shapes)
+@pytest.mark.parametrize("order", orders)
+@pytest.mark.parametrize("axis", [0, 1])
 def test_round_trip_k_interpolation_2d(radius: np.ndarray, order: int, shape: Callable, axis: int):
-    k_grid = radius/10
+    k_grid = radius / 10
     transformer = HankelTransform(order=order, k_grid=k_grid)
 
     # the function must be smoothish for interpolation
     # to work. Random every point doesn't work
     dims_amplitude = np.ones(2, int)
-    dims_amplitude[1-axis] = 10
+    dims_amplitude[1 - axis] = 10
     amplitude = np.random.random(dims_amplitude)
     dims_k = np.ones(2, int)
     dims_k[axis] = len(radius)
@@ -284,18 +273,19 @@ def test_round_trip_k_interpolation_2d(radius: np.ndarray, order: int, shape: Ca
 # Test known HT pairs
 # -------------------
 
-@pytest.mark.parametrize('a', [1, 0.7, 0.1])
+
+@pytest.mark.parametrize("a", [1, 0.7, 0.1])
 def test_jinc(transformer: HankelTransform, a: float):
     f = generalised_jinc(transformer.r, a, transformer.order)
     expected_ht = generalised_top_hat(transformer.v, a, transformer.order)
     actual_ht = transformer.qdht(f)
-    error = np.mean(np.abs(expected_ht-actual_ht))
+    error = np.mean(np.abs(expected_ht - actual_ht))
     assert error < 1e-3
 
 
-@pytest.mark.parametrize('two_d_size', [1, 100, 27])
-@pytest.mark.parametrize('axis', [0, 1])
-@pytest.mark.parametrize('a', [1, 0.7, 0.1])
+@pytest.mark.parametrize("two_d_size", [1, 100, 27])
+@pytest.mark.parametrize("axis", [0, 1])
+@pytest.mark.parametrize("a", [1, 0.7, 0.1])
 def test_jinc2d(transformer: HankelTransform, a: float, axis: int, two_d_size: int):
     f = generalised_jinc(transformer.r, a, transformer.order)
     second_axis = np.outer(np.linspace(0, 6, two_d_size), f)
@@ -307,44 +297,44 @@ def test_jinc2d(transformer: HankelTransform, a: float, axis: int, two_d_size: i
         f_array = np.outer(second_axis, f)
         expected_ht_array = np.outer(second_axis, expected_ht)
     actual_ht = transformer.qdht(f_array, axis=axis)
-    error = np.mean(np.abs(expected_ht_array-actual_ht))
+    error = np.mean(np.abs(expected_ht_array - actual_ht))
     assert error < 1e-3
 
 
-@pytest.mark.parametrize('a', [1, 1.5, 0.1])
+@pytest.mark.parametrize("a", [1, 1.5, 0.1])
 def test_top_hat(transformer: HankelTransform, a: float):
     f = generalised_top_hat(transformer.r, a, transformer.order)
     expected_ht = generalised_jinc(transformer.v, a, transformer.order)
     actual_ht = transformer.qdht(f)
-    error = np.mean(np.abs(expected_ht-actual_ht))
+    error = np.mean(np.abs(expected_ht - actual_ht))
     assert error < 1e-3
 
 
-@pytest.mark.parametrize('a', [2, 5, 10])
+@pytest.mark.parametrize("a", [2, 5, 10])
 def test_gaussian(a: float, radius: np.ndarray):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
     # both scaling of the argument (so use kr rather than v) and
     # scaling of the magnitude.
     transformer = HankelTransform(order=0, radial_grid=radius)
-    f = np.exp(-a ** 2 * transformer.r ** 2)
-    expected_ht = 2*np.pi*(1 / (2 * a**2)) * np.exp(-transformer.kr**2 / (4 * a**2))
+    f = np.exp(-(a**2) * transformer.r**2)
+    expected_ht = 2 * np.pi * (1 / (2 * a**2)) * np.exp(-(transformer.kr**2) / (4 * a**2))
     actual_ht = transformer.qdht(f)
     assert np.allclose(expected_ht, actual_ht)
 
 
-@pytest.mark.parametrize('a', [2, 5, 10])
+@pytest.mark.parametrize("a", [2, 5, 10])
 def test_inverse_gaussian(a: float, radius: np.ndarray):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
     # both scaling of the argument (so use kr rather than v) and
     # scaling of the magnitude.
     transformer = HankelTransform(order=0, radial_grid=radius)
-    ht = 2*np.pi*(1 / (2 * a**2)) * np.exp(-transformer.kr**2 / (4 * a**2))
+    ht = 2 * np.pi * (1 / (2 * a**2)) * np.exp(-(transformer.kr**2) / (4 * a**2))
     actual_f = transformer.iqdht(ht)
-    expected_f = np.exp(-a ** 2 * transformer.r ** 2)
+    expected_f = np.exp(-(a**2) * transformer.r**2)
     assert np.allclose(expected_f, actual_f)
 
 
-@pytest.mark.parametrize('axis', [0, 1])
+@pytest.mark.parametrize("axis", [0, 1])
 def test_gaussian_2d(axis: int, radius: np.ndarray):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
     # both scaling of the argument (so use kr rather than v) and
@@ -352,19 +342,19 @@ def test_gaussian_2d(axis: int, radius: np.ndarray):
     transformer = HankelTransform(order=0, radial_grid=radius)
     a = np.linspace(2, 10)
     dims_a = np.ones(2, int)
-    dims_a[1-axis] = len(a)
+    dims_a[1 - axis] = len(a)
     dims_r = np.ones(2, int)
     dims_r[axis] = len(transformer.r)
     a_reshaped = np.reshape(a, dims_a)
     r_reshaped = np.reshape(transformer.r, dims_r)
     kr_reshaped = np.reshape(transformer.kr, dims_r)
-    f = np.exp(-a_reshaped**2 * r_reshaped**2)
-    expected_ht = 2*np.pi*(1 / (2 * a_reshaped**2)) * np.exp(-kr_reshaped**2 / (4 * a_reshaped**2))
+    f = np.exp(-(a_reshaped**2) * r_reshaped**2)
+    expected_ht = 2 * np.pi * (1 / (2 * a_reshaped**2)) * np.exp(-(kr_reshaped**2) / (4 * a_reshaped**2))
     actual_ht = transformer.qdht(f, axis=axis)
     assert np.allclose(expected_ht, actual_ht)
 
 
-@pytest.mark.parametrize('axis', [0, 1])
+@pytest.mark.parametrize("axis", [0, 1])
 def test_inverse_gaussian_2d(axis: int, radius: np.ndarray):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
     # both scaling of the argument (so use kr rather than v) and
@@ -372,19 +362,19 @@ def test_inverse_gaussian_2d(axis: int, radius: np.ndarray):
     transformer = HankelTransform(order=0, radial_grid=radius)
     a = np.linspace(2, 10)
     dims_a = np.ones(2, int)
-    dims_a[1-axis] = len(a)
+    dims_a[1 - axis] = len(a)
     dims_r = np.ones(2, int)
     dims_r[axis] = len(transformer.r)
     a_reshaped = np.reshape(a, dims_a)
     r_reshaped = np.reshape(transformer.r, dims_r)
     kr_reshaped = np.reshape(transformer.kr, dims_r)
-    ht = 2*np.pi*(1 / (2 * a_reshaped**2)) * np.exp(-kr_reshaped**2 / (4 * a_reshaped**2))
+    ht = 2 * np.pi * (1 / (2 * a_reshaped**2)) * np.exp(-(kr_reshaped**2) / (4 * a_reshaped**2))
     actual_f = transformer.iqdht(ht, axis=axis)
-    expected_f = np.exp(-a_reshaped ** 2 * r_reshaped ** 2)
+    expected_f = np.exp(-(a_reshaped**2) * r_reshaped**2)
     assert np.allclose(expected_f, actual_f)
 
 
-@pytest.mark.parametrize('a', [2, 1, 0.1])
+@pytest.mark.parametrize("a", [2, 1, 0.1])
 def test_1_over_r2_plus_z2(a: float):
     # Note the definition in Guizar-Sicairos varies by 2*pi in
     # both scaling of the argument (so use kr rather than v) and
@@ -406,31 +396,39 @@ def sinc(x):
 
 
 # noinspection DuplicatedCode
-@pytest.mark.parametrize('p', [1, 4])
+@pytest.mark.parametrize("p", [1, 4])
 def test_sinc(p):
     """Tests from figure 1 of
-        *"Computation of quasi-discrete Hankel transforms of the integer
-        order for propagating optical wave fields"*
-        Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
-        J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
-        """
+    *"Computation of quasi-discrete Hankel transforms of the integer
+    order for propagating optical wave fields"*
+    Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
+    J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
+    """
     transformer = HankelTransform(p, max_radius=3, n_points=256)
     v = transformer.v
     gamma = 5
     func = sinc(2 * np.pi * gamma * transformer.r)
     expected_ht = np.zeros_like(func)
 
-    expected_ht[v < gamma] = (v[v < gamma]**p * np.cos(p * np.pi / 2)
-                              / (2*np.pi*gamma * np.sqrt(gamma**2 - v[v < gamma]**2)
-                                 * (gamma + np.sqrt(gamma**2 - v[v < gamma]**2))**p))
-    expected_ht[v >= gamma] = (np.sin(p * np.arcsin(gamma/v[v >= gamma]))
-                               / (2*np.pi*gamma * np.sqrt(v[v >= gamma]**2 - gamma**2)))
+    expected_ht[v < gamma] = (
+        v[v < gamma] ** p
+        * np.cos(p * np.pi / 2)
+        / (
+            2
+            * np.pi
+            * gamma
+            * np.sqrt(gamma**2 - v[v < gamma] ** 2)
+            * (gamma + np.sqrt(gamma**2 - v[v < gamma] ** 2)) ** p
+        )
+    )
+    expected_ht[v >= gamma] = np.sin(p * np.arcsin(gamma / v[v >= gamma])) / (
+        2 * np.pi * gamma * np.sqrt(v[v >= gamma] ** 2 - gamma**2)
+    )
     ht = transformer.qdht(func)
 
     # use the same error measure as the paper
-    dynamical_error = 20 * np.log10(np.abs(expected_ht-ht) / np.max(ht))
-    not_near_gamma = np.logical_or(v > gamma*1.25,
-                                   v < gamma*0.75)
+    dynamical_error = 20 * np.log10(np.abs(expected_ht - ht) / np.max(ht))
+    not_near_gamma = np.logical_or(v > gamma * 1.25, v < gamma * 0.75)
     assert np.all(dynamical_error < -10)
     assert np.all(dynamical_error[not_near_gamma] < -35)
 
@@ -439,8 +437,8 @@ def test_sinc(p):
 def test_spherical():
     # This test checks whether Laplacian of a Gaussian is calculated correctly
     r = np.linspace(0, 10, 100)
-    function = np.exp(-r**2/2)
-    analytical_laplacian = np.exp(-r**2/2)*(r**2-3)
+    function = np.exp(-(r**2) / 2)
+    analytical_laplacian = np.exp(-(r**2) / 2) * (r**2 - 3)
 
     transformer = HankelTransform(order=0, radial_grid=r, bessel_type="spherical")
     laplacian = transformer.to_transform_r(function)
@@ -466,19 +464,21 @@ def test_Jn_spherical_zeros():
     # 4, 12.5664, 14.0662, 15.5146, 16.9236, 18.3013
     # 5, 15.7080, 17.2208, 18.6890, 20.1218, 21.5254
 
-    expected_zeros = np.array([
-        [3.14159, 4.49341, 5.76346, 6.98793, 8.18256],
-        [6.28319, 7.72525, 9.09501, 10.4171, 11.7049],
-        [9.42478, 10.9041, 12.3229, 13.6980, 15.0397],
-        [12.5664, 14.0662, 15.5146, 16.9236, 18.3013],
-        [15.7080, 17.2208, 18.6890, 20.1218, 21.5254]
-    ])
-    for n in range(0, 5):
+    expected_zeros = np.array(
+        [
+            [3.14159, 4.49341, 5.76346, 6.98793, 8.18256],
+            [6.28319, 7.72525, 9.09501, 10.4171, 11.7049],
+            [9.42478, 10.9041, 12.3229, 13.6980, 15.0397],
+            [12.5664, 14.0662, 15.5146, 16.9236, 18.3013],
+            [15.7080, 17.2208, 18.6890, 20.1218, 21.5254],
+        ]
+    )
+    for n in range(5):
         zs = _Jn_spherical_zeros(n, 5)
         assert np.allclose(zs, expected_zeros[:, n], atol=1e-5)
 
     # test that the zeros are actually zeros of the spherical Bessel function
-    for n in range(0, 10):
+    for n in range(10):
         zs = _Jn_spherical_zeros(n, 10)
         assert np.allclose(scipy_bessel.spherical_jn(n, zs), 0)
 

@@ -18,9 +18,10 @@ recommended.
 
 # %%
 # First import the :class:`.HankelTransform` class and other packages
-from pyhank import HankelTransform
-import scipy.special
 import matplotlib.pyplot as plt
+import scipy.special
+
+from pyhank import HankelTransform
 
 # %%
 # Create a :class:`.HankelTransform` object which holds the grid for :math:`r` and

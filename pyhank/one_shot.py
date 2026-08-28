@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 
 from pyhank import HankelTransform
@@ -7,7 +5,7 @@ from pyhank import HankelTransform
 
 def qdht(
     r: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2, bessel_type: str = "polar"
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Perform a quasi-discrete Hankel transform of the function ``f`` (sampled at points
     ``r``) and return the transformed function and its sample points in :math:`k`-space.
 
@@ -39,7 +37,7 @@ def qdht(
 
 def iqdht(
     k: np.ndarray, f: np.ndarray, order: int = 0, axis: int = -2, bessel_type: str = "polar"
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Perform a inverse quasi-discrete Hankel transform of the function ``f`` (sampled at points
     ``k``) and return the transformed function and its sample points in radial space.
 

@@ -1,5 +1,3 @@
-from typing import Optional, Tuple
-
 import numpy as np
 import scipy.special as scipy_bessel
 from scipy import interpolate
@@ -76,10 +74,10 @@ class HankelTransform:
     def __init__(
         self,
         order: int,
-        max_radius: Optional[float] = None,
-        n_points: Optional[int] = None,
-        radial_grid: Optional[np.ndarray] = None,
-        k_grid: Optional[np.ndarray] = None,
+        max_radius: float | None = None,
+        n_points: int | None = None,
+        radial_grid: np.ndarray | None = None,
+        k_grid: np.ndarray | None = None,
         bessel_type: str = "polar",
     ):
         """Constructor"""
@@ -340,7 +338,7 @@ class HankelTransform:
             fr = jr * np.matmul(self.T, (_fv / jv))
             return np.swapaxes(fr, axis, -2)
 
-    def _get_scaling_factors(self, f: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _get_scaling_factors(self, f: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         if f.ndim > 1:
             n2 = list(f.shape)
             n2[-2] = 1
