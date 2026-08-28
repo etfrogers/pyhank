@@ -13,12 +13,12 @@ a beam-propagation method propagation of a radially-symmetric Gaussian beam.
 
 import time
 
-import numpy as np
-from scipy import interpolate
 import matplotlib.pyplot as plt
-
-from pyhank import HankelTransform, qdht, iqdht
+import numpy as np
 from helper import gauss1d, imagesc
+from scipy import interpolate
+
+from pyhank import HankelTransform, iqdht, qdht
 
 # %%
 # Initialise radius  and :math:`z` grids and beam parameters as in

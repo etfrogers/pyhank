@@ -6,8 +6,8 @@ This example is a comparison of PyHank against results from the
 original publication of the method.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy.special as scipybessel
 
 from pyhank import HankelTransform

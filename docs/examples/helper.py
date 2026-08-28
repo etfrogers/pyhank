@@ -5,8 +5,8 @@ Helper functions
 Defines a couple of helper functions for the examples.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # 1D Gaussian function

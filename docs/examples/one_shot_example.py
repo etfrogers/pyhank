@@ -15,10 +15,11 @@ recommended.
 
 # %%
 # First import the ``qdht`` function and other packages.
-from pyhank import qdht
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.special
-import matplotlib.pyplot as plt
+
+from pyhank import qdht
 
 # %%
 # Create a grid for :math:`r` points and calculate the jinc function.
