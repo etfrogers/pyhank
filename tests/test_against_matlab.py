@@ -4,15 +4,16 @@ import numpy as np
 import pytest
 import scipy.special as scipy_bessel
 
-matlab = pytest.importorskip("matlab")
-from matlab.engine import start_matlab
-
 from pyhank import HankelTransform
-from pyhank.hankel import _spline
+from pyhank._pure_python.hankel import _spline
+
+matlab = pytest.importorskip("matlab")
 
 
 @pytest.fixture(scope="session")
 def engine():
+    from matlab.engine import start_matlab
+
     engine = start_matlab()
 
     hankel_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "matlab")
