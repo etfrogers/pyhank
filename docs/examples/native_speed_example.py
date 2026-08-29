@@ -117,8 +117,8 @@ def large_single_transform(r: np.ndarray, field: np.ndarray, native: bool) -> np
 
 
 # %%
-# The native code is about a factor of 2 faster, which is a significant improvement over the pure Python implementation, but
-# not as much as the transformer creation below.
+# The native code is about a factor of 2 faster, which is a significant improvement over the pure Python
+# implementation, but not as much as the transformer creation below.
 #
 # Run and time the large single transform:
 

@@ -5,6 +5,17 @@ build-backend = "setuptools.build_meta"
 [tool.ruff]
 line-length=119
 
+[tool.ruff.lint]
+extend-select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # Pyflakes
+    "I",     # isort (import sorting)
+    "UP",    # pyupgrade (modern Python syntax)
+    "B",     # flake8-bugbear (common bug patterns)
+    "SIM",   # Simplifications for nested conditionals and loops.
+]
+
 [tool.setuptools_scm]
 # This section enables setuptools_scm
 

@@ -23,17 +23,11 @@ def test_jinc(backend, radius: np.ndarray, a: float, order: int):
 def test_jinc2d(backend, radius: np.ndarray, a: float, order: int, axis: int, two_d_size: int):
     f = generalised_jinc(radius, a, order)
     second_axis = np.outer(np.linspace(0, 6, two_d_size), f)
-    if axis == 0:
-        f_array = np.outer(f, second_axis)
-    else:
-        f_array = np.outer(second_axis, f)
+    f_array = np.outer(f, second_axis) if axis == 0 else np.outer(second_axis, f)
     kr, actual_ht = backend.qdht(radius, f_array, axis=axis)
     v = kr / (2 * np.pi)
     expected_ht = generalised_top_hat(v, a, order)
-    if axis == 0:
-        expected_ht_array = np.outer(expected_ht, second_axis)
-    else:
-        expected_ht_array = np.outer(second_axis, expected_ht)
+    expected_ht_array = np.outer(expected_ht, second_axis) if axis == 0 else np.outer(second_axis, expected_ht)
     error = np.mean(np.abs(expected_ht_array - actual_ht))
     # multiply tolerance to allow for the larger values caused
     # by second_axis having values greater than 1
