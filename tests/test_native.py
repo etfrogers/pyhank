@@ -1,8 +1,9 @@
 import numpy as np
-import pyhank._pyhank_native as native  # type: ignore
 import pytest
 
 import pyhank._pure_python as pure_python
+
+native = pytest.importorskip("pyhank._pyhank_native")  # type: ignore
 
 
 @pytest.mark.parametrize("order", [1, 2, 5])
