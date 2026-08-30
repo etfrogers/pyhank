@@ -1,17 +1,17 @@
 use approx::relative_eq;
 use hankrs::{
-    one_shot::{iqdht as rust_iqdht, qdht as rust_qdht},
-    HankelScalar, HankelTransform, InterpError,
+    one_shot::{
+        iqdht as rust_iqdht, iqdht_spherical as rust_iqdht_spherical, qdht as rust_qdht,
+        qdht_spherical as rust_qdht_spherical,
+    },
+    HankelError, HankelScalar, HankelTransform,
 };
 use num::complex::Complex64;
 use numpy::{
     ndarray::Axis, IntoPyArray, PyArray1, PyArray2, PyArrayMethods, PyReadonlyArray1,
     PyReadonlyArrayDyn, PyUntypedArray, PyUntypedArrayMethods, ToPyArray,
 };
-use pyo3::{
-    exceptions::{PyNotImplementedError, PyValueError},
-    prelude::*,
-};
+use pyo3::{exceptions::PyValueError, prelude::*};
 
 #[pyclass(name = "HankelTransform")]
 pub struct PyHankelTransform {
@@ -44,15 +44,15 @@ macro_rules! dynamic_dispatch_to {
 }
 
 #[pyfunction]
-#[pyo3(signature = (r, f, order=0, axis=None, bessel_type="polar"))]
+#[pyo3(signature = (r, f, order=0, axis=None, bessel_type=TransformType::Polar))]
 fn qdht<'py>(
     py: Python<'py>,
     r: PyReadonlyArray1<'py, f64>,
     f: PyDataArray<'py>,
     order: i32,
     axis: Option<usize>,
-    bessel_type: &str,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
+    bessel_type: TransformType,
+) -> Result<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>), PyHankError> {
     dynamic_dispatch_to!(internal_qdht, py, r, f, order, axis, bessel_type)
 }
 
@@ -62,32 +62,30 @@ fn internal_qdht<'py, T: HankelScalarLocal>(
     f: PyReadonlyArrayDyn<'py, T>,
     order: i32,
     axis: Option<usize>,
-    bessel_type: &str,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
-    if bessel_type != "polar" {
-        return Err(PyNotImplementedError::new_err(
-            "Only polar bessel type is implemented",
-        ));
-    }
+    bessel_type: TransformType,
+) -> Result<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>), PyHankError> {
     let r = r.to_owned_array();
-    let f_view = f.as_array();
+    let f_view = &f.as_array();
     let axis = default_axis(axis, &f);
-    let result = py.detach(|| rust_qdht(r, &f_view, order, axis));
+    let result = py.detach(|| match bessel_type {
+        TransformType::Polar => rust_qdht(r, f_view, order, axis),
+        TransformType::Spherical => rust_qdht_spherical(r, f_view, order, axis),
+    })?;
     let kr = result.0.into_pyarray(py);
     let ht = result.1.into_pyarray(py);
     Ok((kr, ht.as_untyped().clone()))
 }
 
 #[pyfunction]
-#[pyo3(signature = (kr, f, order=0, axis=None, bessel_type="polar"))]
+#[pyo3(signature = (kr, f, order=0, axis=None, bessel_type=TransformType::Polar))]
 fn iqdht<'py>(
     py: Python<'py>,
     kr: PyReadonlyArray1<'py, f64>,
     f: PyDataArray<'py>,
     order: i32,
     axis: Option<usize>,
-    bessel_type: &str,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
+    bessel_type: TransformType,
+) -> Result<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>), PyHankError> {
     dynamic_dispatch_to!(internal_iqdht, py, kr, f, order, axis, bessel_type)
 }
 
@@ -101,17 +99,15 @@ fn internal_iqdht<'py, T: HankelScalarLocal + 'py>(
     f: PyReadonlyArrayDyn<'py, T>,
     order: i32,
     axis: Option<usize>,
-    bessel_type: &str,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>)> {
-    if bessel_type != "polar" {
-        return Err(PyNotImplementedError::new_err(
-            "Only polar bessel type is implemented",
-        ));
-    }
+    bessel_type: TransformType,
+) -> Result<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>), PyHankError> {
     let kr = kr.to_owned_array();
     let f_view = &f.as_array();
     let axis = default_axis(axis, &f);
-    let result = py.detach(|| rust_iqdht(kr, f_view, order, axis));
+    let result = py.detach(|| match bessel_type {
+        TransformType::Polar => rust_iqdht(kr, f_view, order, axis),
+        TransformType::Spherical => rust_iqdht_spherical(kr, f_view, order, axis),
+    })?;
     let r = result.0.into_pyarray(py);
     let ht = result.1.into_pyarray(py);
     Ok((r, ht.as_untyped().clone()))
@@ -173,7 +169,7 @@ impl PyHankelTransform {
         radial_grid: Option<PyReadonlyArray1<'py, f64>>,
         k_grid: Option<PyReadonlyArray1<'py, f64>>,
         bessel_type: TransformType,
-    ) -> PyResult<Self> {
+    ) -> Result<Self, PyHankError> {
         let ht = match (max_radius, n_points, radial_grid, k_grid) {
             (None, None, Some(radial_grid), None) => {
                 let radial_grid = radial_grid.as_array().to_owned();
@@ -199,11 +195,12 @@ impl PyHankelTransform {
                 }
             }
             _ => {
-                return Err(PyValueError::new_err(
-                    "Either radial_grid or k_grid or both max_radius and n_points must be supplied",
+                return Err(PyHankError::new_err(
+                    "Either radial_grid or k_grid or both max_radius and n_points must be supplied"
+                        .to_string(),
                 ));
             }
-        };
+        }?;
         Ok(PyHankelTransform { inner: ht })
     }
 
@@ -380,21 +377,28 @@ fn _pyhank_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 pub enum PyHankError {
-    Interp(InterpError),
+    Hankel(HankelError),
+    Interface(String),
 }
 
-impl From<InterpError> for PyHankError {
-    fn from(err: InterpError) -> Self {
-        PyHankError::Interp(err)
+impl From<HankelError> for PyHankError {
+    fn from(err: HankelError) -> Self {
+        PyHankError::Hankel(err)
     }
 }
 
 impl From<PyHankError> for PyErr {
     fn from(err: PyHankError) -> Self {
         match err {
-            PyHankError::Interp(e) => PyValueError::new_err(e.to_string()),
-            // PyHankError::Core(e) => ... map your core errors here ...
+            PyHankError::Hankel(e) => PyValueError::new_err(e.to_string()),
+            PyHankError::Interface(e) => PyValueError::new_err(e),
         }
+    }
+}
+
+impl PyHankError {
+    pub fn new_err(msg: String) -> Self {
+        PyHankError::Interface(msg)
     }
 }
 
