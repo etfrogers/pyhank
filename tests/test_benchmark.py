@@ -5,6 +5,7 @@ from pyhank import _pure_python
 
 from .test_hankel import generalised_jinc
 
+pytest.importorskip("pytest_benchmark", reason="pytest-benchmark is required to run benchmarks")
 _pyhank_native = pytest.importorskip(
     "pyhank._pyhank_native",
     reason="Rust extension not built — benchmark tests require native backend",

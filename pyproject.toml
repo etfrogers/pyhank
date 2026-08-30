@@ -65,6 +65,7 @@ Homepage = "https://github.com/etfrogers/pyhank"
 dev = [
     "pytest~=9.0.2",
     "pytest-cov~=7.0",
+    "pytest-benchmark~=5.2",
     "setuptools_scm",
 ]
 docs = [
