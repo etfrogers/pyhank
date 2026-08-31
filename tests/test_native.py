@@ -57,4 +57,3 @@ def test_properties_readonly(prop):
 
     with pytest.raises((AttributeError, TypeError)):
         setattr(native_t, prop, 42)
-

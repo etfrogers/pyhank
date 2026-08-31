@@ -180,8 +180,13 @@ def test_initialisation_errors(backend):
     with pytest.raises(TypeError):
         backend.HankelTransform(order=0, k_grid=k_2d)
 
+    with pytest.raises(ValueError):
+        backend.HankelTransform(order=0, max_radius=1, n_points=10, bessel_type="linear")
+
     # no error
     _ = backend.HankelTransform(order=0, max_radius=1, n_points=10)
+    _ = backend.HankelTransform(order=0, max_radius=1, n_points=10, bessel_type="polar")
+    _ = backend.HankelTransform(order=0, max_radius=1, n_points=10, bessel_type="spherical")
     _ = backend.HankelTransform(order=0, radial_grid=r_1d)
     _ = backend.HankelTransform(order=0, k_grid=k_1d)
 
