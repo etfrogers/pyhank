@@ -16,6 +16,7 @@ use pyo3::{exceptions::PyValueError, prelude::*};
 #[pyclass(name = "HankelTransform")]
 pub struct PyHankelTransform {
     inner: HankelTransform,
+    bessel_type: TransformType,
 }
 
 #[pyfunction]
@@ -170,6 +171,7 @@ impl PyHankelTransform {
         k_grid: Option<PyReadonlyArray1<'py, f64>>,
         bessel_type: TransformType,
     ) -> Result<Self, PyHankError> {
+        let bessel_clone = bessel_type.clone();
         let ht = match (max_radius, n_points, radial_grid, k_grid) {
             (None, None, Some(radial_grid), None) => {
                 let radial_grid = radial_grid.as_array().to_owned();
@@ -201,7 +203,10 @@ impl PyHankelTransform {
                 ));
             }
         }?;
-        Ok(PyHankelTransform { inner: ht })
+        Ok(PyHankelTransform {
+            inner: ht,
+            bessel_type: bessel_clone,
+        })
     }
 
     #[getter]
@@ -252,10 +257,9 @@ impl PyHankelTransform {
 
     #[getter]
     fn bessel_type(&self) -> &'static str {
-        if self.inner.is_spherical() {
-            "spherical"
-        } else {
-            "polar"
+        match self.bessel_type {
+            TransformType::Polar => "polar",
+            TransformType::Spherical => "spherical",
         }
     }
 
