@@ -31,7 +31,7 @@ class HankelTransform:
        As in option 2, :attr:`.HankelTransform.n_points` is determined by ``k_grid.size``.
        :attr:`HankelTransform.r_max` is determined in a more complex way from ``np.max(k_grid)``.
 
-    By setting the argument ``bessel_type`` to either ``"polar"`` od ``"spherical"`` it is possible
+    By setting the argument ``bessel_type`` to either ``"polar"`` or ``"spherical"`` it is possible
     to choose between :math:`J_n` and :math:`j_n` Bessel functions (default is ``"polar"``).
 
     :parameter order: Transform order :math:`p`
@@ -44,7 +44,7 @@ class HankelTransform:
         it is used to set `N` and :math:`r_\textrm{max}` by ``n_points = radial_grid.size`` and
         ``r_max = np.max(radial_grid)``
     :type radial_grid: :class:`numpy.ndarray`
-    :parameter k_grid: (Optional) Number of sample points :math:`N`
+    :parameter k_grid: (Optional) The :math:`k`-space grid that will be used to sample input functions
     :type k_grid: :class:`numpy.ndarray`
     :parameter bessel_type: (Optional) Type of Bessel functions used to compute the transform
     :type bessel_type: :class:`str`
@@ -311,9 +311,9 @@ class HankelTransform:
         a function of frequency.
 
         .. math::
-            f_v(v) = \mathcal{H}^{-1}\{f_r(r)\}
+            f_v(v) = \mathcal{H}\{f_r(r)\}
 
-        .. warning:
+        .. warning::
             The input function must be sampled at the points ``self.r``, and the output
             will be sampled at the points ``self.v`` (or equivalently ``self.kr``)
 

@@ -6,18 +6,15 @@ PyHank requires NumPy and SciPy, but these will be installed by ``pip`` if neces
 
 ``pip install pyhank``
 
-For use of the code, this is sufficient.
+Pre-compiled binary wheels (with high-performance Rust acceleration) are provided for 64-bit Linux, macOS (Apple Silicon and Intel), and 64-bit Windows.
 
 ---------------
 
-For development, and running the tests, the following are required:
+For development and running the test suite, install with development dependencies:
 
-- pytest ~= 5.4.3
-- flake8 ~= 3.8.3
-- pytest-flake8 ~= 1.0.6
-- pytest-cov ~= 2.10.0
+``pip install -e .[dev]``
 
-For building the documentation, the following are also required:
+For building the documentation locally:
 
-- sphinx-gallery >= 0.7
-- matplotlib >= 3.2
+``pip install -e .[docs]``
+

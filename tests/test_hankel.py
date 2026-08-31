@@ -23,7 +23,8 @@ def generalised_top_hat(r: np.ndarray, a: float, p: int) -> np.ndarray:
 
 
 def generalised_jinc(v: np.ndarray, a: float, p: int):
-    val = a ** (p + 1) * scipy_bessel.jv(p + 1, 2 * np.pi * a * v) / v
+    with np.errstate(invalid="ignore", divide="ignore"):
+        val = a ** (p + 1) * scipy_bessel.jv(p + 1, 2 * np.pi * a * v) / v
     if p == -1:
         val[v == 0] = np.inf
     elif p == -2:
