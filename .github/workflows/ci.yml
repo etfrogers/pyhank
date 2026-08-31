@@ -155,7 +155,7 @@ jobs:
         env:
           CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y"
           CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH"'
-          CIBW_SKIP: "pp* *i686* *musllinux*"
+          CIBW_SKIP: "pp* *i686* *win32* *musllinux*"
           CIBW_TEST_COMMAND: "python {project}/pyhank/confirm_native_extension.py"
       - uses: actions/upload-artifact@v4
         with:
