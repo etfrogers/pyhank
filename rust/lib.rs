@@ -246,6 +246,20 @@ impl PyHankelTransform {
     }
 
     #[getter]
+    fn max_radius(&self) -> f64 {
+        self.inner.max_radius()
+    }
+
+    #[getter]
+    fn bessel_type(&self) -> &'static str {
+        if self.inner.is_spherical() {
+            "spherical"
+        } else {
+            "polar"
+        }
+    }
+
+    #[getter]
     fn original_radial_grid<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyArray1<f64>>> {
         let v = self.inner.original_radial_grid();
         // Note this copies the data into a new PyArray1
