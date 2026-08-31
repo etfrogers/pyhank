@@ -61,6 +61,8 @@ packages = ["pyhank", "pyhank._pure_python"]
 [tool.setuptools.package-data]
 "pyhank" = ["matlab/*.m", "matlab/License.txt"]
 
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "10.12"
 
 [[tool.setuptools-rust.ext-modules]]
 # Private Rust extension module to be nested into the Python package
