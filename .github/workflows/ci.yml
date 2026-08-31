@@ -50,7 +50,7 @@ jobs:
           args: "check ."
       - name: Test with pytest
         run: |
-          pytest --cov=./
+          pytest --cov=pyhank
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
