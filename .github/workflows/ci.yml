@@ -115,7 +115,7 @@ jobs:
           pip install -e .[docs]
       - name: Build docs
         run: |
-          sphinx-build ./docs/ ./docs/build/
+          sphinx-build -W --keep-going ./docs/ ./docs/build/
       - name: Upload docs artifacts
         uses: actions/upload-artifact@v4
         with:

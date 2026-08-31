@@ -16,7 +16,7 @@ from pyhank import HankelTransform
 # %%
 # First we will reproduce figure 1 of
 #
-# .. [#Guizar] *"Computation of quasi-discrete Hankel transforms of the integer
+# .. [Guizar] *"Computation of quasi-discrete Hankel transforms of the integer
 #     order for propagating optical wave fields"*
 #     Manuel Guizar-Sicairos and Julio C. Guitierrez-Vega
 #     J. Opt. Soc. Am. A **21** (1) 53-58 (2004)
@@ -51,7 +51,7 @@ def hankel_transform_of_sinc(v):
 
 
 # %%
-# Now plot the values of the hankel transform and the dynamical error as in figure 1 of |Guizar| `Guizar`_
+# Now plot the values of the hankel transform and the dynamical error as in figure 1 of [Guizar]_
 # for order 1 and 4
 for p in [1, 4]:
     transformer = HankelTransform(p, max_radius=3, n_points=256)
