@@ -1,0 +1,18 @@
+[run]
+source = pyhank
+omit =
+    */confirm_native_extension.py
+    tests/*
+    docs/*
+    setup.py
+    release.py
+
+[report]
+omit =
+    */confirm_native_extension.py
+    tests/*
+    docs/*
+    setup.py
+    release.py
+
+

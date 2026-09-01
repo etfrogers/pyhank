@@ -4,6 +4,10 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.12"
+    rust: "latest"
+  jobs:
+    post_install:
+      - pip install -e .[docs]
 
 sphinx:
   configuration: docs/conf.py

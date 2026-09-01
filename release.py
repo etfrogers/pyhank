@@ -82,7 +82,7 @@ def main():  # pragma: no cover
         elif matches_start(version, "major"):
             new_version.increment_major()
         else:
-            raise ValueError("Invalid version specifier")
+            raise ValueError("Invalid version specifier") from None
 
     print(f"New version will be: {new_version!s}")
     continue_response = input("Continue? [Y/n]: ")

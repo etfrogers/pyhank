@@ -1,18 +1,6 @@
 [build-system]
-requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "build"]
+requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
-
-[tool.ruff]
-line-length=119
-
-[tool.setuptools_scm]
-# This section enables setuptools_scm
-
-[tool.setuptools]
-packages = ["pyhank"]
-
-[tool.setuptools.package-data]
-"pyhank" = ["matlab/*.m", "matlab/License.txt"]
 
 [project]
 name = "pyhank"
@@ -21,16 +9,14 @@ authors = [{ name = "Edward Rogers", email = "etfrogers@hotmail.com" }]
 description = "pyhank - Quasi-discrete Hankel transforms for python"
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT"
+license = {text = "MIT"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy~=2.2",
-    "numpy~=2.4; python_version >= '3.14'",
-    "scipy~=1.15; python_version == '3.10'",
-    "scipy~=1.17; python_version > '3.10'",
+    "numpy>=2.0.0",
+    "scipy>=1.13.0",
 ]
 
 [project.urls]
@@ -38,13 +24,50 @@ Homepage = "https://github.com/etfrogers/pyhank"
 
 [project.optional-dependencies]
 dev = [
-    "pytest~=9.0.2",
-    "pytest-cov~=7.0",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-benchmark>=4.0",
     "setuptools_scm",
 ]
 docs = [
-    "sphinx-gallery~=0.20",
-    "sphinx_rtd_theme~=3.1",
-    "pillow~=12.2",
-    "matplotlib~=3.10",
+    "sphinx>=7.0",
+    "sphinx-gallery>=0.18",
+    "sphinx_rtd_theme>=3.0",
+    "pillow>=10.0",
+    "matplotlib>=3.8",
 ]
+
+[tool.ruff]
+line-length=119
+
+[tool.ruff.lint]
+extend-select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # Pyflakes
+    "I",     # isort (import sorting)
+    "UP",    # pyupgrade (modern Python syntax)
+    "B",     # flake8-bugbear (common bug patterns)
+    "SIM",   # Simplifications for nested conditionals and loops.
+]
+
+[tool.setuptools_scm]
+# This section enables setuptools_scm
+
+[tool.setuptools]
+packages = ["pyhank", "pyhank._pure_python"]
+
+[tool.setuptools.package-data]
+"pyhank" = ["matlab/*.m", "matlab/License.txt"]
+
+[tool.cibuildwheel.macos.environment]
+MACOSX_DEPLOYMENT_TARGET = "10.12"
+
+[[tool.setuptools-rust.ext-modules]]
+# Private Rust extension module to be nested into the Python package
+target = "pyhank._pyhank_native"  # The last part of the name (e.g. "_lib") has to match lib.name in Cargo.toml,
+                             # but you can add a prefix to nest it inside of a Python package.
+debug = false                # Force release build even for editable installs
+optional = true              # Fallback to pure-Python if Rust is missing
+path = "Cargo.toml"      # Default value, can be omitted
+binding = "PyO3"         # Default value, can be omitted

@@ -31,7 +31,7 @@ class HankelTransform:
        As in option 2, :attr:`.HankelTransform.n_points` is determined by ``k_grid.size``.
        :attr:`HankelTransform.r_max` is determined in a more complex way from ``np.max(k_grid)``.
 
-    By setting the argument ``bessel_type`` to either ``"polar"`` od ``"spherical"`` it is possible
+    By setting the argument ``bessel_type`` to either ``"polar"`` or ``"spherical"`` it is possible
     to choose between :math:`J_n` and :math:`j_n` Bessel functions (default is ``"polar"``).
 
     :parameter order: Transform order :math:`p`
@@ -44,21 +44,21 @@ class HankelTransform:
         it is used to set `N` and :math:`r_\textrm{max}` by ``n_points = radial_grid.size`` and
         ``r_max = np.max(radial_grid)``
     :type radial_grid: :class:`numpy.ndarray`
-    :parameter k_grid: (Optional) Number of sample points :math:`N`
+    :parameter k_grid: (Optional) The :math:`k`-space grid that will be used to sample input functions
     :type k_grid: :class:`numpy.ndarray`
     :parameter bessel_type: (Optional) Type of Bessel functions used to compute the transform
     :type bessel_type: :class:`str`
 
-    :ivar alpha: The first :math:`N` Roots of the :math:`p` th order Bessel function.
-    :ivar alpha_n1: (N+1)th root :math:`\alpha_{N1}`
-    :ivar r: Radial co-ordinate vector
-    :ivar v: frequency co-ordinate vector
-    :ivar kr: Radial wave number co-ordinate vector
-    :ivar v_max: Limiting frequency :math:`v_\textrm{max} = \alpha_{N1}/(2 \pi R)`
-    :ivar S: RV product :math:`2\pi r_\textrm{max} v_max`
-    :ivar T: Transform matrix
-    :ivar JR: Radius transform vector :math:`J_R = J_{p+1}(\alpha) / r_\textrm{max}`
-    :ivar JV: Frequency transform vector :math:`J_V = J_{p+1}(\alpha) / v_\textrm{max}`
+    :ivar order: Transform order :math:`p`
+    :ivar n_points: Number of sample points :math:`N`
+    :ivar max_radius: Radial extent of transform :math:`r_\textrm{max}`
+    :ivar bessel_type: Type of Bessel functions used (``"polar"`` or ``"spherical"``)
+    :ivar r: Radial coordinate vector
+    :ivar v: Frequency coordinate vector
+    :ivar kr: Radial wavenumber coordinate vector (:math:`2\pi v`)
+    :ivar T: Unitary transform matrix
+    :ivar original_radial_grid: Original radial grid used to construct the transform, if provided
+    :ivar original_k_grid: Original :math:`k`-space grid used to construct the transform, if provided
 
     The algorithm used is that from:
 
@@ -70,6 +70,8 @@ class HankelTransform:
     The algorithm also calls the function :func:`scipy.special.jn_zeros` to calculate
     the roots of the bessel function.
     """
+
+    __module__ = "pyhank"
 
     def __init__(
         self,
@@ -89,12 +91,14 @@ class HankelTransform:
         elif k_grid is not None:
             if max_radius is not None or n_points is not None or radial_grid is not None:
                 raise ValueError(usage)
-            assert k_grid.ndim == 1, "k grid must be a 1d array"
+            if k_grid.ndim != 1:
+                raise TypeError("k grid must be a 1d array")
             n_points = k_grid.size
         elif radial_grid is not None:
             if max_radius is not None or n_points is not None:
                 raise ValueError(usage)
-            assert radial_grid.ndim == 1, "Radial grid must be a 1d array"
+            if radial_grid.ndim != 1:
+                raise TypeError("Radial grid must be a 1d array")
             max_radius = np.max(radial_grid)
             n_points = radial_grid.size
         else:
@@ -104,47 +108,48 @@ class HankelTransform:
         self._n_points = n_points
         self._original_radial_grid = radial_grid
         self._original_k_grid = k_grid
-        self.bessel_type = bessel_type
+        self._bessel_type = bessel_type
 
         # Calculate N+1 roots must be calculated before max_radius can be derived from k_grid
-        usage = "Available types of Bessel functions are `polar` and `spherical`"
+        usage = f"Invalid transform type: '{bessel_type}'. Expected 'polar' or 'spherical'."
         alpha = None
         if bessel_type == "polar":
-            alpha = scipy_bessel.jn_zeros(self.order, self.n_points + 1)
+            alpha = scipy_bessel.jn_zeros(self._order, self._n_points + 1)
         elif bessel_type == "spherical":
-            alpha = _Jn_spherical_zeros(self.order, self.n_points + 1)
+            alpha = _Jn_spherical_zeros(self._order, self._n_points + 1)
         else:
             raise ValueError(usage)
 
-        self.alpha = alpha[0:-1]
-        self.alpha_n1 = alpha[-1]
+        self._alpha = alpha[0:-1]
+        self._alpha_n1 = alpha[-1]
 
         if k_grid is not None:
             v_max = np.max(k_grid) / (2 * np.pi)
-            max_radius = self.alpha_n1 / (2 * np.pi * v_max)
+            max_radius = self._alpha_n1 / (2 * np.pi * v_max)
         self._max_radius: float = max_radius  # pyright: ignore[reportAttributeAccessIssue]
 
         # Calculate co-ordinate vectors
-        self.r = self.alpha * self.max_radius / self.alpha_n1
-        self.v = self.alpha / (2 * np.pi * self.max_radius)
-        self.kr = 2 * np.pi * self.v
-        self.v_max = self.alpha_n1 / (2 * np.pi * self.max_radius)
-        self.S = self.alpha_n1
+        self._r = self._alpha * self._max_radius / self._alpha_n1
+        self._v = self._alpha / (2 * np.pi * self._max_radius)
+        self._kr = 2 * np.pi * self._v
+        self._v_max = self._alpha_n1 / (2 * np.pi * self._max_radius)
+        self._S = self._alpha_n1
 
         # Calculate hankel matrix and vectors
         if bessel_type == "polar":
-            jp = scipy_bessel.jv(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
-            jp1 = np.abs(scipy_bessel.jv(order + 1, self.alpha))
-            self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S)
+            jp = scipy_bessel.jv(order, (self._alpha[:, np.newaxis] @ self._alpha[np.newaxis, :]) / self._S)
+            jp1 = np.abs(scipy_bessel.jv(order + 1, self._alpha))
+            self._T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self._S)
+            self._JR = jp1 / self._max_radius
+            self._JV = jp1 / self._v_max
         elif bessel_type == "spherical":
-            jp = scipy_bessel.spherical_jn(order, (self.alpha[:, np.newaxis] @ self.alpha[np.newaxis, :]) / self.S)
-            jp1 = np.abs(scipy_bessel.spherical_jn(order + 1, self.alpha))
-            self.T = 2 * jp / ((jp1[:, np.newaxis] @ jp1[np.newaxis, :]) * self.S) / np.sqrt(2 * len(self.r))
+            jp = scipy_bessel.spherical_jn(order, (self._alpha[:, np.newaxis] @ self._alpha[np.newaxis, :]) / self._S)
+            jp1 = np.abs(scipy_bessel.spherical_jn(order + 1, self._alpha))
+            self._T = np.sqrt(2 * np.pi / self._S**3) * jp / (jp1[:, np.newaxis] @ jp1[np.newaxis, :])
+            self._JR = jp1 / self._max_radius
+            self._JV = jp1 * (self._max_radius**2) * np.sqrt(np.pi / (2 * self._S**3))
         else:
             raise ValueError(usage)  # pragma: no cover - backup case: cannot currently be reached
-
-        self.JR = jp1 / self.max_radius
-        self.JV = jp1 / self.v_max
 
     @property
     def order(self) -> int:
@@ -157,6 +162,26 @@ class HankelTransform:
     @property
     def n_points(self) -> int:
         return self._n_points
+
+    @property
+    def bessel_type(self) -> str:
+        return self._bessel_type
+
+    @property
+    def r(self) -> np.ndarray:
+        return self._r
+
+    @property
+    def v(self) -> np.ndarray:
+        return self._v
+
+    @property
+    def kr(self) -> np.ndarray:
+        return self._kr
+
+    @property
+    def T(self) -> np.ndarray:
+        return self._T
 
     @property
     def original_radial_grid(self) -> np.ndarray:
@@ -286,9 +311,9 @@ class HankelTransform:
         a function of frequency.
 
         .. math::
-            f_v(v) = \mathcal{H}^{-1}\{f_r(r)\}
+            f_v(v) = \mathcal{H}\{f_r(r)\}
 
-        .. warning:
+        .. warning::
             The input function must be sampled at the points ``self.r``, and the output
             will be sampled at the points ``self.v`` (or equivalently ``self.kr``)
 
@@ -343,13 +368,31 @@ class HankelTransform:
             n2 = list(f.shape)
             n2[-2] = 1
             _shape = np.ones_like(n2)
-            _shape[-2] = len(self.JR)
-            jr = np.reshape(self.JR, _shape) * np.ones(n2)
-            jv = np.reshape(self.JV, _shape) * np.ones(n2)
+            _shape[-2] = len(self._JR)
+            jr = np.reshape(self._JR, _shape) * np.ones(n2)
+            jv = np.reshape(self._JV, _shape) * np.ones(n2)
         else:
-            jr = self.JR
-            jv = self.JV
+            jr = self._JR
+            jv = self._JV
         return jr, jv
+
+    def _approx_equal(self, other: "HankelTransform"):
+        for attr in ["order", "n_points", "max_radius", "bessel_type", "r", "v", "kr", "T"]:
+            try:
+                val1 = getattr(self, attr)
+                val2 = getattr(other, attr)
+            except AttributeError:
+                return False
+            if isinstance(val1, (int, str)):
+                if val1 != val2:
+                    return False
+            elif isinstance(val1, float):
+                if not np.isclose(val1, val2):
+                    return False
+            else:
+                if not np.allclose(val1, val2):
+                    return False
+        return True
 
 
 def _spline(x0: np.ndarray, y0: np.ndarray, x: np.ndarray, axis: int) -> np.ndarray:

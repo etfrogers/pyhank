@@ -1,0 +1,27 @@
+# Cargo.toml
+[package]
+name = "pyhank-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pyo3 = "0.29"
+hankrs = "1.1"
+numpy = "0.29"
+approx = "0.5.1"
+num = "0.4.3"
+
+[lib]
+name = "_pyhank_native"  # private module to be nested into Python package,
+               # needs to match the name of the function with the `[#pymodule]` attribute
+path = "rust/lib.rs"
+crate-type = ["cdylib"]  # required for shared library for Python to import from.
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# See also PyO3 docs on writing Cargo.toml files at https://pyo3.rs
+
+[profile.release]
+lto = "fat"           # Link Time Optimization: allows cross-crate optimizations
+codegen-units = 1     # Slower to compile, but gives LLVM the whole program to optimize
+panic = "abort"       # Removes panic-unwinding overhead
+opt-level = 3         # Maximum optimization

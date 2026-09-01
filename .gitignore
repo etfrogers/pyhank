@@ -12,3 +12,6 @@ pyhank.egg-info/
 .DS_Store
 *.lprof
 venv/
+target/
+*.so
+docs/sg_execution_times.rst

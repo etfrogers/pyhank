@@ -16,6 +16,12 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
+# Force autodoc to use the pure-Python backend so it can read the docstrings.
+# The native Rust extension (_pyhank_native) has no Python docstrings, so we
+# block it here; pyhank/__init__.py will then fall through to _pure_python.
+# Setting a sys.modules entry to None causes "import X" to raise ImportError.
+sys.modules["pyhank._pyhank_native"] = None  # type: ignore[assignment]
+
 # -- Project information -----------------------------------------------------
 
 project = "PyHank"
@@ -52,7 +58,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "examples/README.rst"]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
@@ -71,6 +77,7 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+html_static_path = []
+
 
 html_title = "PyHank documentation"
