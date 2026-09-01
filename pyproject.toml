@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "build", "setuptools-rust"]
+requires = ["setuptools>=44", "wheel", "setuptools_scm[toml]>=3.4.3", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -15,10 +15,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy~=2.2",
-    "numpy~=2.4; python_version >= '3.14'",
-    "scipy~=1.15; python_version == '3.10'",
-    "scipy~=1.17; python_version > '3.10'",
+    "numpy>=2.0.0",
+    "scipy>=1.13.0",
 ]
 
 [project.urls]
@@ -26,16 +24,17 @@ Homepage = "https://github.com/etfrogers/pyhank"
 
 [project.optional-dependencies]
 dev = [
-    "pytest~=9.0.2",
-    "pytest-cov~=7.0",
-    "pytest-benchmark~=5.2",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-benchmark>=4.0",
     "setuptools_scm",
 ]
 docs = [
-    "sphinx-gallery~=0.20",
-    "sphinx_rtd_theme~=3.1",
-    "pillow~=12.2",
-    "matplotlib~=3.10",
+    "sphinx>=7.0",
+    "sphinx-gallery>=0.18",
+    "sphinx_rtd_theme>=3.0",
+    "pillow>=10.0",
+    "matplotlib>=3.8",
 ]
 
 [tool.ruff]
