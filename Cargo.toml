@@ -6,10 +6,15 @@ edition = "2021"
 
 [dependencies]
 pyo3 = "0.29"
-hankrs = "1.1"
 numpy = "0.29"
 approx = "0.5.1"
 num = "0.4.3"
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+hankrs = "1.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+hankrs = { version = "1.2", features = ["blas"] }
 
 [lib]
 name = "_pyhank_native"  # private module to be nested into Python package,
