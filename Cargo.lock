@@ -4,27 +4,12 @@ version = 4
 
 [[package]]
 name = "amos-bessel-rs"
-version = "0.3.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff7e9443f8e3b9b55d8b18ece15a300d7d582ab3ea7f117a9b3aa3ec4c07f98f"
-dependencies = [
- "approx",
- "conv",
- "itertools 0.14.0",
- "num",
- "paste",
- "thiserror",
-]
-
-[[package]]
-name = "amos-bessel-rs"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd6cee45b9a6caf42178e9602c82828529f5851b6988d6fdce832dcb48d63dc6"
+checksum = "d3d92ea4f0d1b3dfc9d7b4c3c88dfa81313813868dccda37d562c92fdb23909b"
 dependencies = [
  "num",
  "num-integer",
- "paste",
  "thiserror",
 ]
 
@@ -34,7 +19,6 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cab112f0a86d568ea0e627cc1d6be74a1e9cd55214684db5561995f6dad897c6"
 dependencies = [
- "num-complex",
  "num-traits",
 ]
 
@@ -50,7 +34,7 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08422b7fd4d64e613ab5c8731f5411a366af70bc0e5990e03008c1a378d4d92c"
 dependencies = [
- "amos-bessel-rs 1.0.0",
+ "amos-bessel-rs",
  "num",
  "real-bessel",
 ]
@@ -69,15 +53,6 @@ name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
-
-[[package]]
-name = "conv"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "78ff10625fd0ac447827aa30ea8b861fead473bb60aeb73af6c1c58caf0d1299"
-dependencies = [
- "custom_derive",
-]
 
 [[package]]
 name = "crossbeam-deque"
@@ -105,12 +80,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61803da095bee82a81bb1a452ecc25d3b2f1416d1897eb86430c6159ef717c17"
 
 [[package]]
-name = "custom_derive"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef8ae57c4978a2acd8b869ce6b9ca1dfe817bff704c220209fdef2c0b75a01b9"
-
-[[package]]
 name = "either"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -135,11 +104,11 @@ dependencies = [
 
 [[package]]
 name = "hankrs"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54d7674393c779c413fef32f4092484ef3aa008b07984cb0085fd175d82d64d8"
+checksum = "9e65f7570972e2aeb9c49f943dc8398aef92e0c34ea7f15367dfe9c0ef8b588c"
 dependencies = [
- "amos-bessel-rs 0.3.0",
+ "amos-bessel-rs",
  "approx",
  "bessel-zeros",
  "ndarray",
@@ -180,15 +149,6 @@ name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
 dependencies = [
  "either",
 ]
@@ -252,7 +212,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17ebbe97acce52d06aebed4cd4a87c0941f4b2519b59b82b4feb5bd0ce003dfd"
 dependencies = [
  "indexmap",
- "itertools 0.13.0",
+ "itertools",
  "ndarray",
  "noisy_float",
  "num-integer",
@@ -363,12 +323,6 @@ name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
-
-[[package]]
-name = "paste"
-version = "1.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "portable-atomic"
