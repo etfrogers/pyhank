@@ -17,6 +17,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "amos-bessel-rs"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd6cee45b9a6caf42178e9602c82828529f5851b6988d6fdce832dcb48d63dc6"
+dependencies = [
+ "num",
+ "num-integer",
+ "paste",
+ "thiserror",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -34,12 +46,22 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "bessel-zeros"
-version = "0.2.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca5be37c7d9393b13f8692da05589e3d7af40cce5da0b5e35f28cabc95be493f"
+checksum = "08422b7fd4d64e613ab5c8731f5411a366af70bc0e5990e03008c1a378d4d92c"
 dependencies = [
- "amos-bessel-rs",
+ "amos-bessel-rs 1.0.0",
+ "num",
  "real-bessel",
+]
+
+[[package]]
+name = "cblas-sys"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6feecd82cce51b0204cf063f0041d69f24ce83f680d87514b004248e7b0fa65"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -113,11 +135,11 @@ dependencies = [
 
 [[package]]
 name = "hankrs"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5f80801c2a08be9f492c425b1d8740948c606efbd277a56c034f2ee84a58406"
+checksum = "54d7674393c779c413fef32f4092484ef3aa008b07984cb0085fd175d82d64d8"
 dependencies = [
- "amos-bessel-rs",
+ "amos-bessel-rs 0.3.0",
  "approx",
  "bessel-zeros",
  "ndarray",
@@ -178,6 +200,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
 
 [[package]]
+name = "libm"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
+
+[[package]]
 name = "matrixmultiply"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -194,6 +222,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "882ed72dce9365842bf196bdeedf5055305f11fc8c03dee7bb0194a6cad34841"
 dependencies = [
  "approx",
+ "cblas-sys",
+ "libc",
  "matrixmultiply",
  "num-complex",
  "num-integer",
@@ -274,9 +304,9 @@ dependencies = [
 
 [[package]]
 name = "num-integer"
-version = "0.1.46"
+version = "0.1.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7969661fd2958a5cb096e56c8e1ad0444ac2bbcd0061bd28660485a44879858f"
+checksum = "7ce2d95d4b3734dc35aa2f45e1aa22cd416814592a4f9d9205e11affd5b8e10b"
 dependencies = [
  "num-traits",
 ]
@@ -309,6 +339,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
+ "libm",
 ]
 
 [[package]]
@@ -507,10 +538,11 @@ dependencies = [
 
 [[package]]
 name = "real-bessel"
-version = "0.1.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "121c9a33aff1a6b101ce71e0dabe333adda7cc3625e19c86b2ead4a1d09df461"
+checksum = "0a63db37b3b882c9a014f81467bc78f6e7c3da1ce9c729b5bcdf52ab0e8e2764"
 dependencies = [
+ "num",
  "thiserror",
 ]
 
