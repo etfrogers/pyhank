@@ -1,0 +1,39 @@
+# Configuration for cargo-deny
+
+[graph]
+all-features = true
+
+[advisories]
+# Enables the modern version 2 schema rules
+version = 2
+# If you need to ignore specific advisories, add them here
+ignore = []
+
+[licenses]
+# Enables the modern version 2 schema rules
+version = 2
+unused-allowed-license = "allow"
+# The list of licenses your organization explicitly allows.
+# Anything NOT on this list is rejected automatically.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "CC0-1.0",
+    "Unicode-3.0",
+]
+
+[bans]
+# Forces a failure if multiple versions of the exact same crate are found
+multiple-versions = "deny"
+skip = []
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+# allow-registry = ["https://github.com"]
+allow-git = []
