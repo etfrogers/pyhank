@@ -1,3 +1,8 @@
+#![warn(clippy::all, clippy::pedantic)]
+
+#[cfg(target_os = "macos")]
+extern crate blas_src;
+
 use approx::relative_eq;
 use hankrs::{
     one_shot::{
@@ -28,23 +33,24 @@ macro_rules! dynamic_dispatch_to {
     ($fun:ident, $py:ident, $kr:ident, $f:ident, $order:expr, $axis:expr, $bessel_type:expr) => {
         match $f {
             PyDataArray::Float(f_array) => {
-                $fun::<f64>($py, $kr, f_array, $order, $axis, $bessel_type)
+                $fun::<f64>($py, &$kr, &f_array, $order, $axis, $bessel_type)
             }
             PyDataArray::Complex(f_array) => {
-                $fun::<Complex64>($py, $kr, f_array, $order, $axis, $bessel_type)
+                $fun::<Complex64>($py, &$kr, &f_array, $order, $axis, $bessel_type)
             }
         }
     };
     ($fun:ident, $py:ident, $transformer:ident, $data:ident, $axis:expr) => {
         match $data {
-            PyDataArray::Float(f_array) => $fun::<f64>($transformer, $py, f_array, $axis),
-            PyDataArray::Complex(f_array) => $fun::<Complex64>($transformer, $py, f_array, $axis),
+            PyDataArray::Float(f_array) => $fun::<f64>($transformer, $py, &f_array, $axis),
+            PyDataArray::Complex(f_array) => $fun::<Complex64>($transformer, $py, &f_array, $axis),
         }
     };
 }
 
 #[pyfunction]
 #[pyo3(signature = (r, f, order=0, axis=None, bessel_type=TransformType::Polar))]
+#[allow(clippy::needless_pass_by_value)]
 fn qdht<'py>(
     py: Python<'py>,
     r: PyReadonlyArray1<'py, f64>,
@@ -58,15 +64,15 @@ fn qdht<'py>(
 
 fn internal_qdht<'py, T: HankelScalarLocal>(
     py: Python<'py>,
-    r: PyReadonlyArray1<'py, f64>,
-    f: PyReadonlyArrayDyn<'py, T>,
+    r: &PyReadonlyArray1<'py, f64>,
+    f: &PyReadonlyArrayDyn<'py, T>,
     order: i32,
     axis: Option<usize>,
     bessel_type: TransformType,
 ) -> Result<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>), PyHankError> {
     let r = r.to_owned_array();
     let f_view = &f.as_array();
-    let axis = default_axis(axis, &f);
+    let axis = default_axis(axis, f);
     let result = py.detach(|| match bessel_type {
         TransformType::Polar => rust_qdht(r, f_view, order, axis),
         TransformType::Spherical => rust_qdht_spherical(r, f_view, order, axis),
@@ -78,6 +84,7 @@ fn internal_qdht<'py, T: HankelScalarLocal>(
 
 #[pyfunction]
 #[pyo3(signature = (kr, f, order=0, axis=None, bessel_type=TransformType::Polar))]
+#[allow(clippy::needless_pass_by_value)]
 fn iqdht<'py>(
     py: Python<'py>,
     kr: PyReadonlyArray1<'py, f64>,
@@ -95,15 +102,15 @@ impl HankelScalarLocal for Complex64 {}
 
 fn internal_iqdht<'py, T: HankelScalarLocal + 'py>(
     py: Python<'py>,
-    kr: PyReadonlyArray1<'py, f64>,
-    f: PyReadonlyArrayDyn<'py, T>,
+    kr: &PyReadonlyArray1<'py, f64>,
+    f: &PyReadonlyArrayDyn<'py, T>,
     order: i32,
     axis: Option<usize>,
     bessel_type: TransformType,
 ) -> Result<(Bound<'py, PyArray1<f64>>, Bound<'py, PyUntypedArray>), PyHankError> {
     let kr = kr.to_owned_array();
     let f_view = &f.as_array();
-    let axis = default_axis(axis, &f);
+    let axis = default_axis(axis, f);
     let result = py.detach(|| match bessel_type {
         TransformType::Polar => rust_iqdht(kr, f_view, order, axis),
         TransformType::Spherical => rust_iqdht_spherical(kr, f_view, order, axis),
@@ -120,10 +127,10 @@ fn default_axis<T: HankelScalarLocal>(axis: Option<usize>, data: &PyReadonlyArra
 fn transformer_qdht<'py, T: HankelScalarLocal>(
     transformer: &HankelTransform,
     py: Python<'py>,
-    data: PyReadonlyArrayDyn<'py, T>,
+    data: &PyReadonlyArrayDyn<'py, T>,
     axis: Option<usize>,
 ) -> Bound<'py, PyUntypedArray> {
-    let axis = default_axis(axis, &data);
+    let axis = default_axis(axis, data);
     let data_view = data.as_array();
     let result = py.detach(|| transformer.qdht(&data_view, axis));
     result.into_pyarray(py).as_untyped().clone()
@@ -132,7 +139,7 @@ fn transformer_qdht<'py, T: HankelScalarLocal>(
 fn transformer_iqdht<'py, T: HankelScalarLocal>(
     transformer: &HankelTransform,
     py: Python<'py>,
-    data: PyReadonlyArrayDyn<'py, T>,
+    data: &PyReadonlyArrayDyn<'py, T>,
     axis: Option<usize>,
 ) -> Bound<'py, PyUntypedArray> {
     let axis = axis.unwrap_or(data.ndim().saturating_sub(2));
@@ -234,15 +241,13 @@ impl PyHankelTransform {
     }
 
     #[getter]
-    fn order<'py>(&self) -> i32 {
-        let order = self.inner.order();
-        order
+    fn order(&self) -> i32 {
+        self.inner.order()
     }
 
     #[getter]
-    fn n_points<'py>(&self) -> usize {
-        let n = self.inner.n_points();
-        n
+    fn n_points(&self) -> usize {
+        self.inner.n_points()
     }
 
     #[getter]
@@ -407,6 +412,7 @@ impl From<PyHankError> for PyErr {
 }
 
 impl PyHankError {
+    #[must_use]
     pub fn new_err(msg: String) -> Self {
         PyHankError::Interface(msg)
     }
@@ -418,7 +424,7 @@ pub enum PyDataArray<'py> {
     Complex(PyReadonlyArrayDyn<'py, Complex64>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum TransformType {
     Polar,
     Spherical,
