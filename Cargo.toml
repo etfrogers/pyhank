@@ -16,6 +16,7 @@ hankrs = "1.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 hankrs = { version = "1.2", features = ["blas"] }
+blas-src = { version = "0.8", features = ["accelerate"] }
 
 [lib]
 name = "_pyhank_native"  # private module to be nested into Python package,
