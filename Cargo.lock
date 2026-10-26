@@ -119,9 +119,9 @@ dependencies = [
 
 [[package]]
 name = "hankrs"
-version = "1.2.3"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdfebec7b76aefb615114911661cf2208f0ebaa71058d6b7bf69de59780eb6f1"
+checksum = "e5d80be26bb1436f3dc65aca42f197fc01e9f9f9385a13b973ba906d4f56e597"
 dependencies = [
  "amos-bessel-rs",
  "approx",
@@ -192,9 +192,9 @@ dependencies = [
 
 [[package]]
 name = "ndarray"
-version = "0.16.1"
+version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "882ed72dce9365842bf196bdeedf5055305f11fc8c03dee7bb0194a6cad34841"
+checksum = "520080814a7a6b4a6e9070823bb24b4531daac8c4627e08ba5de8c5ef2f2752d"
 dependencies = [
  "approx",
  "cblas-sys",
@@ -211,9 +211,9 @@ dependencies = [
 
 [[package]]
 name = "ndarray-interp"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e43087829efb5ec2736598e88587df286425b59df5a9ce991994cdd2c5855d3f"
+checksum = "18a7b5c99c8993e67501e620ba3d231aff1d62b13fa7f362fe6564069d67b9ea"
 dependencies = [
  "ndarray",
  "num-traits",
@@ -222,9 +222,9 @@ dependencies = [
 
 [[package]]
 name = "ndarray-stats"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17ebbe97acce52d06aebed4cd4a87c0941f4b2519b59b82b4feb5bd0ce003dfd"
+checksum = "9b6e54a8b65764f71827a90ca1d56965ec0c67f069f996477bd493402a901d1f"
 dependencies = [
  "indexmap",
  "itertools",
